@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA — AI Wishlist & Outfit Modeler</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            400: '#f472b6',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            900: '#831843',
+                        },
+                        dark: {
+                            900: '#09090b',
+                            850: '#121215',
+                            800: '#18181b',
+                            700: '#27272a',
+                            600: '#3f3f46'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #121215; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+        .glass-panel {
+            background: rgba(24, 24, 27, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Drag over visual feedback */
+        .drag-over {
+            border-color: #ec4899 !important;
+            background-color: rgba(236, 72, 153, 0.15) !important;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col overflow-hidden bg-dark-900 selection:bg-pink-500/30 selection:text-pink-300">
+
+    <!-- TOP NAVIGATION HEADER -->
+    <header class="h-16 border-b border-zinc-800 bg-dark-850 px-6 flex items-center justify-between z-20 flex-shrink-0">
+        <div class="flex items-center space-x-6">
+            <!-- User Branding -->
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center font-bold text-white shadow-lg shadow-pink-500/20 text-sm">
+                    A
+                </div>
+                <span class="text-xs font-semibold uppercase tracking-widest text-zinc-400">hi elden</span>
+            </div>
+
+            <!-- Nav Tabs -->
+            <nav class="flex items-center space-x-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
+                <button id="tab-wishlist" onclick="switchTab('wishlist')" class="px-4 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center space-x-2 bg-zinc-800 text-white shadow-sm">
+                    <i data-lucide="grid" class="w-3.5 h-3.5 text-pink-400"></i>
+                    <span>Wishlist</span>
+                    <span id="badge-wishlist" class="ml-1 px-1.5 py-0.5 text-[10px] bg-pink-500/20 text-pink-300 rounded-full font-semibold">0</span>
+                </button>
+                <button id="tab-modeler" onclick="switchTab('modeler')" class="px-4 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center space-x-2 text-zinc-400 hover:text-white">
+                    <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                    <span>Outfit Modeler</span>
+                </button>
+                <button id="tab-graveyard" onclick="switchTab('graveyard')" class="px-4 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center space-x-2 text-zinc-400 hover:text-white">
+                    <i data-lucide="skull" class="w-3.5 h-3.5"></i>
+                    <span>Graveyard</span>
+                    <span id="badge-graveyard" class="ml-1 px-1.5 py-0.5 text-[10px] bg-zinc-800 text-zinc-400 rounded-full">0</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Wishlist Filters & Action Controls -->
+        <div id="wishlist-controls" class="flex items-center space-x-3">
+            <div class="relative w-56">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-zinc-500"></i>
+                <input type="text" id="search-input" oninput="applyFilters()" placeholder="Filter by keyword or tag..." 
+                    class="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-4 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-pink-500/50 transition">
+            </div>
+
+            <!-- Quick Filter Selectors -->
+            <select id="filter-type" onchange="applyFilters()" class="bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-xl px-3 py-1.5 focus:outline-none focus:border-pink-500/50">
+                <option value="all">All Categories</option>
+                <option value="tops">Tops</option>
+                <option value="bottoms">Bottoms</option>
+                <option value="jackets">Jackets</option>
+                <option value="shoes">Shoes</option>
+                <option value="accessories">Accessories</option>
+            </select>
+
+            <select id="filter-color" onchange="applyFilters()" class="bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-xl px-3 py-1.5 focus:outline-none focus:border-pink-500/50">
+                <option value="all">All Colors</option>
+                <option value="pink">Pink</option>
+                <option value="black">Black</option>
+                <option value="white">White</option>
+                <option value="brown">Brown</option>
+            </select>
+
+            <button onclick="openAddItemModal()" class="px-3.5 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition shadow-lg shadow-pink-600/20">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Add Item</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 relative overflow-hidden flex">
+
+        <!-- VIEW 1: WISHLIST GRID (MacBook Air - 1 & 2) -->
+        <section id="view-wishlist" class="flex-1 overflow-y-auto p-6 transition-opacity duration-300">
+            <div id="wishlist-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <!-- Add Item Trigger Card -->
+                <div onclick="openAddItemModal()" class="aspect-square rounded-2xl border-2 border-dashed border-zinc-800 hover:border-pink-500/50 bg-zinc-900/40 hover:bg-zinc-900/80 flex flex-col items-center justify-center cursor-pointer transition group">
+                    <div class="w-12 h-12 rounded-2xl bg-zinc-800 group-hover:bg-pink-500/20 flex items-center justify-center text-zinc-400 group-hover:text-pink-400 transition mb-2">
+                        <i data-lucide="plus" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-xs font-medium text-zinc-400 group-hover:text-zinc-200">Add Item / General Idea</span>
+                </div>
+
+                <!-- Dynamic Item Cards Rendered Here -->
+            </div>
+        </section>
+
+        <!-- VIEW 2: OUTFIT MODELER (MacBook Air - 5) -->
+        <section id="view-modeler" class="flex-1 hidden flex overflow-hidden">
+            <!-- Left: Mannequin Visual Canvas -->
+            <div class="flex-1 bg-zinc-950 flex flex-col items-center justify-center p-6 relative border-r border-zinc-800">
+                
+                <!-- Controls Header -->
+                <div class="absolute top-4 left-4 flex items-center space-x-2 bg-zinc-900/80 p-1.5 rounded-2xl border border-zinc-800 backdrop-blur z-10">
+                    <button onclick="clearModelerCanvas()" class="px-3 py-1.5 text-xs text-zinc-400 hover:text-white flex items-center space-x-1.5 rounded-xl hover:bg-zinc-800 transition">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        <span>Reset Outfit</span>
+                    </button>
+                    <div class="h-3 w-px bg-zinc-800"></div>
+                    <button onclick="generateAIOutfitSuggestion()" class="px-3 py-1.5 text-xs text-pink-400 hover:text-pink-300 font-semibold flex items-center space-x-1.5 rounded-xl hover:bg-pink-950/40 transition">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        <span>AI Style Complement</span>
+                    </button>
+                </div>
+
+                <!-- Outfit Cost Badge -->
+                <div class="absolute top-4 right-4 bg-zinc-900/90 border border-zinc-800 px-4 py-2 rounded-2xl text-right backdrop-blur z-10">
+                    <div class="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Total Look Cost</div>
+                    <div id="modeler-total-cost" class="text-lg font-bold text-pink-400">$0</div>
+                </div>
+
+                <!-- Interactive Silhouette & Equipment Slots -->
+                <div class="relative w-full max-w-sm h-[82vh] flex items-center justify-center">
+                    <!-- Silhouette Visual -->
+                    <svg class="h-full w-auto opacity-20 text-zinc-400 select-none pointer-events-none" viewBox="0 0 100 240" fill="currentColor">
+                        <path d="M50,15 C55,15 58,11 58,6 C58,2 55,0 50,0 C45,0 42,2 42,6 C42,11 45,15 50,15 Z M68,32 C62,28 56,26 50,26 C44,26 38,28 32,32 C27,36 24,45 22,58 C21,65 22,70 24,70 C26,70 27,64 28,58 C30,48 34,42 38,40 C38,55 37,85 36,115 C35,120 38,122 42,122 C46,122 47,118 47,110 C47,90 48,70 48,60 L52,60 C52,70 53,90 53,110 C53,118 54,122 58,122 C62,122 65,120 64,115 C63,85 62,55 62,40 C66,42 70,48 72,58 C73,64 74,70 76,70 C78,70 79,65 78,58 C76,45 73,36 68,32 Z M42,225 C40,235 48,240 50,240 C52,240 60,235 58,225 L56,120 L44,120 L42,225 Z"/>
+                    </svg>
+
+                    <!-- Target Equipment Slots -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-between py-4">
+                        
+                        <!-- Accessories (Head/Acc) -->
+                        <div id="slot-accessories" 
+                             ondrop="handleDrop(event, 'accessories')" 
+                             ondragover="allowDrop(event)" 
+                             onclick="unequipSlot('accessories')" 
+                             class="w-24 h-24 rounded-2xl border-2 border-dashed border-zinc-800 hover:border-pink-500/60 bg-zinc-900/60 flex flex-col items-center justify-center relative cursor-pointer group transition shadow-xl overflow-hidden">
+                            <i data-lucide="glasses" class="w-5 h-5 text-zinc-600 group-hover:text-zinc-400 slot-placeholder"></i>
+                            <span class="text-[10px] text-zinc-500 mt-1 font-medium slot-placeholder">Accessories</span>
+                            <div class="slot-content absolute inset-0 hidden"></div>
+                        </div>
+
+                        <!-- Tops / Jackets Slot -->
+                        <div id="slot-tops" 
+                             ondrop="handleDrop(event, 'tops')" 
+                             ondragover="allowDrop(event)" 
+                             onclick="unequipSlot('tops')" 
+                             class="w-36 h-36 rounded-2xl border-2 border-dashed border-zinc-800 hover:border-pink-500/60 bg-zinc-900/60 flex flex-col items-center justify-center relative cursor-pointer group transition shadow-xl overflow-hidden my-auto">
+                            <i data-lucide="shirt" class="w-6 h-6 text-zinc-600 group-hover:text-zinc-400 slot-placeholder"></i>
+                            <span class="text-[10px] text-zinc-500 mt-1 font-medium slot-placeholder">Tops / Outerwear</span>
+                            <div class="slot-content absolute inset-0 hidden"></div>
+                        </div>
+
+                        <!-- Bottoms Slot -->
+                        <div id="slot-bottoms" 
+                             ondrop="handleDrop(event, 'bottoms')" 
+                             ondragover="allowDrop(event)" 
+                             onclick="unequipSlot('bottoms')" 
+                             class="w-36 h-36 rounded-2xl border-2 border-dashed border-zinc-800 hover:border-pink-500/60 bg-zinc-900/60 flex flex-col items-center justify-center relative cursor-pointer group transition shadow-xl overflow-hidden mb-auto">
+                            <i data-lucide="scissors" class="w-6 h-6 text-zinc-600 group-hover:text-zinc-400 slot-placeholder"></i>
+                            <span class="text-[10px] text-zinc-500 mt-1 font-medium slot-placeholder">Bottoms</span>
+                            <div class="slot-content absolute inset-0 hidden"></div>
+                        </div>
+
+                        <!-- Shoes Slot -->
+                        <div id="slot-shoes" 
+                             ondrop="handleDrop(event, 'shoes')" 
+                             ondragover="allowDrop(event)" 
+                             onclick="unequipSlot('shoes')" 
+                             class="w-28 h-24 rounded-2xl border-2 border-dashed border-zinc-800 hover:border-pink-500/60 bg-zinc-900/60 flex flex-col items-center justify-center relative cursor-pointer group transition shadow-xl overflow-hidden">
+                            <i data-lucide="footprints" class="w-5 h-5 text-zinc-600 group-hover:text-zinc-400 slot-placeholder"></i>
+                            <span class="text-[10px] text-zinc-500 mt-1 font-medium slot-placeholder">Shoes</span>
+                            <div class="slot-content absolute inset-0 hidden"></div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Wardrobe Picker Panel -->
+            <div class="w-96 bg-zinc-900/90 border-l border-zinc-800 flex flex-col">
+                <div class="p-4 border-b border-zinc-800">
+                    <h3 class="text-sm font-semibold text-zinc-200">Drag or Click Wardrobe</h3>
+                    <p class="text-[11px] text-zinc-500">Drag items to mannequin slots or tap to equip</p>
+                </div>
+
+                <!-- Modeler Category Sub-tabs -->
+                <div class="p-2 bg-zinc-950/60 flex space-x-1 border-b border-zinc-800/80 overflow-x-auto">
+                    <button onclick="filterModelerWardrobe('all')" class="modeler-tab-btn active px-3 py-1 text-xs rounded-lg bg-zinc-800 text-white font-medium">All</button>
+                    <button onclick="filterModelerWardrobe('tops')" class="modeler-tab-btn px-3 py-1 text-xs rounded-lg text-zinc-400 hover:text-white">Tops</button>
+                    <button onclick="filterModelerWardrobe('bottoms')" class="modeler-tab-btn px-3 py-1 text-xs rounded-lg text-zinc-400 hover:text-white">Bottoms</button>
+                    <button onclick="filterModelerWardrobe('shoes')" class="modeler-tab-btn px-3 py-1 text-xs rounded-lg text-zinc-400 hover:text-white">Shoes</button>
+                    <button onclick="filterModelerWardrobe('accessories')" class="modeler-tab-btn px-3 py-1 text-xs rounded-lg text-zinc-400 hover:text-white">Acc</button>
+                </div>
+
+                <!-- Wardrobe Items Grid -->
+                <div id="modeler-wardrobe-grid" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-3">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: ARCHIVE / GRAVEYARD -->
+        <section id="view-graveyard" class="flex-1 overflow-y-auto p-6 hidden">
+            <div class="max-w-5xl mx-auto">
+                <div class="mb-6 flex items-center justify-between border-b border-zinc-800 pb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-zinc-200 flex items-center space-x-2">
+                            <i data-lucide="skull" class="w-5 h-5 text-zinc-500"></i>
+                            <span>The Item Graveyard</span>
+                        </h2>
+                        <p class="text-xs text-zinc-500">Items you've purchased or removed. Restore them anytime.</p>
+                    </div>
+                    <button onclick="clearGraveyard()" class="px-3 py-1.5 text-xs bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-900/40 rounded-xl transition font-medium">
+                        Permanently Delete All
+                    </button>
+                </div>
+
+                <div id="graveyard-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <!-- Graveyard items rendered here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- MODAL 1: ADD ITEM DRAWER (MacBook Air - 3) -->
+        <div id="add-item-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex justify-end transition-all">
+            <div class="w-full max-w-md bg-zinc-900 border-l border-zinc-800 h-full p-6 flex flex-col justify-between shadow-2xl">
+                <div>
+                    <div class="flex items-center justify-between border-b border-zinc-800 pb-4 mb-6">
+                        <h3 class="text-base font-bold text-zinc-100 flex items-center space-x-2">
+                            <i data-lucide="plus-circle" class="w-5 h-5 text-pink-500"></i>
+                            <span>add item</span>
+                        </h3>
+                        <button onclick="closeAddItemModal()" class="text-zinc-500 hover:text-white p-1 rounded-lg">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Mode Toggle -->
+                    <div class="grid grid-cols-2 gap-2 p-1 bg-zinc-950 rounded-xl border border-zinc-800 mb-6">
+                        <button id="add-mode-link" onclick="setAddMode('link')" class="py-2 text-xs font-semibold rounded-lg bg-zinc-800 text-white transition">Paste Specific Link</button>
+                        <button id="add-mode-general" onclick="setAddMode('general')" class="py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white transition">General Item / Idea</button>
+                    </div>
+
+                    <!-- Mode A: Specific Product URL Link -->
+                    <div id="form-specific-link" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-zinc-400 mb-1">paste link</label>
+                            <div class="relative">
+                                <input type="url" id="input-item-url" placeholder="https://www.ssense.com/en-us/women/product/..." 
+                                    class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-pink-500">
+                                <button onclick="autoFetchMetaData()" class="absolute right-2 top-1.5 px-2 py-1 text-[10px] bg-pink-500/20 text-pink-300 rounded-lg hover:bg-pink-500/30 transition">
+                                    Autofill Metadata
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-zinc-400 mb-1">Item Title</label>
+                            <input type="text" id="input-item-title" placeholder="Mohair pink sweater..." 
+                                class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-pink-500">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-zinc-400 mb-1">Price ($USD)</label>
+                                <input type="number" id="input-item-price" placeholder="214" 
+                                    class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-pink-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-zinc-400 mb-1">Category</label>
+                                <select id="input-item-type" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-pink-500">
+                                    <option value="tops">Tops</option>
+                                    <option value="bottoms">Bottoms</option>
+                                    <option value="jackets">Jackets</option>
+                                    <option value="shoes">Shoes</option>
+                                    <option value="accessories">Accessories</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-zinc-400 mb-1">Color Tag</label>
+                                <input type="text" id="input-item-color" placeholder="pink, black, beige..." 
+                                    class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-pink-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-zinc-400 mb-1">Material Tag</label>
+                                <input type="text" id="input-item-material" placeholder="Mohair, Leather, Silk..." 
+                                    class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-pink-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-zinc-400 mb-1">Image URL</label>
+                            <input type="url" id="input-item-img" placeholder="https://images.unsplash.com/..." 
+                                class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-pink-500">
+                        </div>
+                    </div>
+
+                    <!-- Mode B: General AI Idea (MacBook Air - 3 general item) -->
+                    <div id="form-general-item" class="space-y-4 hidden">
+                        <div class="p-3 bg-pink-950/20 border border-pink-900/30 rounded-2xl flex items-start space-x-3">
+                            <i data-lucide="sparkles" class="w-5 h-5 text-pink-400 mt-0.5 flex-shrink-0"></i>
+                            <p class="text-xs text-pink-200">Type a general description (e.g. "Pink Shorts"). AI will search options from across the web and create a rotating option card!</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-zinc-400 mb-1">general item / describe what you want</label>
+                            <input type="text" id="input-general-query" placeholder="e.g., pink shorts, platform loafers..." 
+                                class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-pink-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-zinc-400 mb-1">Default Category</label>
+                            <select id="input-general-type" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-pink-500">
+                                <option value="bottoms">Bottoms</option>
+                                <option value="tops">Tops</option>
+                                <option value="jackets">Jackets</option>
+                                <option value="shoes">Shoes</option>
+                                <option value="accessories">Accessories</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-zinc-800 flex space-x-3">
+                    <button onclick="closeAddItemModal()" class="flex-1 py-2 text-xs font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition">Cancel</button>
+                    <button onclick="saveNewItem()" class="flex-1 py-2 text-xs font-semibold bg-pink-600 hover:bg-pink-500 text-white rounded-xl shadow-lg shadow-pink-600/20 transition">Save to Wishlist</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL 2: AI SEARCH DRAWER (MacBook Air - 4) -->
+        <div id="ai-search-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex justify-end transition-all">
+            <div class="w-full max-w-xl bg-zinc-900 border-l border-zinc-800 h-full p-6 flex flex-col justify-between shadow-2xl">
+                <div>
+                    <!-- Header -->
+                    <div class="flex items-center justify-between border-b border-zinc-800 pb-4 mb-4">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h3 id="ai-search-title" class="text-base font-bold text-zinc-100">pink shorts</h3>
+                                <span class="px-2 py-0.5 text-[10px] bg-pink-500/20 text-pink-300 rounded-full font-semibold">AI Options Drawer</span>
+                            </div>
+                            <p class="text-xs text-zinc-500 mt-0.5">Discovered live options based on your general idea</p>
+                        </div>
+                        <button onclick="closeAISearchModal()" class="text-zinc-500 hover:text-white p-1 rounded-lg">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Filters for AI Drawer -->
+                    <div class="grid grid-cols-3 gap-2 mb-4 bg-zinc-950 p-2 rounded-xl border border-zinc-800">
+                        <div>
+                            <label class="block text-[10px] text-zinc-500 font-medium mb-1">Max Price</label>
+                            <select id="ai-filter-price" onchange="filterAIOptions()" class="w-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-lg px-2 py-1 focus:outline-none">
+                                <option value="all">Any Price</option>
+                                <option value="50">Under $50</option>
+                                <option value="100">Under $100</option>
+                                <option value="250">Under $250</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-zinc-500 font-medium mb-1">Sizing</label>
+                            <select id="ai-filter-size" onchange="filterAIOptions()" class="w-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-lg px-2 py-1 focus:outline-none">
+                                <option value="all">All Sizes</option>
+                                <option value="XS">XS / US 0-2</option>
+                                <option value="S">S / US 4-6</option>
+                                <option value="M">M / US 8-10</option>
+                                <option value="L">L / US 12+</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-zinc-500 font-medium mb-1">Retailer</label>
+                            <select id="ai-filter-brand" onchange="filterAIOptions()" class="w-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-lg px-2 py-1 focus:outline-none">
+                                <option value="all">All Retailers</option>
+                                <option value="H&M">H&M</option>
+                                <option value="Zara">Zara</option>
+                                <option value="SSENSE">SSENSE</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- AI Search Grid Options (MacBook Air - 4) -->
+                    <div id="ai-options-grid" class="grid grid-cols-3 gap-3 overflow-y-auto max-h-[62vh] pr-1">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-zinc-800 flex justify-between items-center text-xs text-zinc-500">
+                    <span>* Adding an item preserves the "general" item card.</span>
+                    <button onclick="closeAISearchModal()" class="px-4 py-2 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 rounded-xl font-medium transition">Done</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- APPLICATION LOGIC & STORAGE -->
+    <script>
+        // Initial Seed Data (Matches Wireframe references)
+        const SEED_WISHLIST = [
+            {
+                id: '1',
+                title: 'Mohair pink sweater',
+                price: 214,
+                type: 'tops',
+                color: 'pink',
+                material: 'Mohair',
+                image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=600&q=80',
+                isGeneral: false,
+                graveyard: false,
+                url: 'https://www.ssense.com'
+            },
+            {
+                id: '2',
+                title: 'Pink Shorts',
+                price: 0,
+                type: 'bottoms',
+                color: 'pink',
+                material: 'Cotton',
+                isGeneral: true,
+                options: [
+                    { id: 'opt1', title: 'H&M Pink Linen Shorts', price: 29, brand: 'H&M', size: 'S', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=600&q=80', url: 'https://hm.com' },
+                    { id: 'opt2', title: 'Zara Bermuda Pink Shorts', price: 49, brand: 'Zara', size: 'M', image: 'https://images.unsplash.com/photo-1584370848010-d7fe6bc767ec?auto=format&fit=crop&w=600&q=80', url: 'https://zara.com' },
+                    { id: 'opt3', title: 'SSENSE Designer Shorts', price: 215, brand: 'SSENSE', size: 'S', image: 'https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=600&q=80', url: 'https://ssense.com' }
+                ],
+                currentOptionIdx: 0,
+                graveyard: false
+            },
+            {
+                id: '3',
+                title: 'Oversized Leather Jacket',
+                price: 480,
+                type: 'jackets',
+                color: 'black',
+                material: 'Leather',
+                image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=600&q=80',
+                isGeneral: false,
+                graveyard: false,
+                url: 'https://www.acnestudios.com'
+            },
+            {
+                id: '4',
+                title: 'Chunky Platform Loafers',
+                price: 195,
+                type: 'shoes',
+                color: 'black',
+                material: 'Leather',
+                image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&q=80',
+                isGeneral: false,
+                graveyard: false,
+                url: 'https://www.prada.com'
+            },
+            {
+                id: '5',
+                title: 'Leather Shoulder Bag',
+                price: 320,
+                type: 'accessories',
+                color: 'brown',
+                material: 'Leather',
+                image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80',
+                isGeneral: false,
+                graveyard: false,
+                url: 'https://www.farfetch.com'
+            }
+        ];
+
+        // Persistent State
+        let wishlistItems = loadFromStorage();
+        let equippedItems = { accessories: null, tops: null, bottoms: null, shoes: null };
+        let currentAddMode = 'link';
+        let activeGeneralItemId = null;
+
+        // Initialize Application
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            renderWishlist();
+            renderModelerWardrobe();
+            renderGraveyard();
+            startRotatingCarousels();
+        });
+
+        // Local Storage Helpers
+        function saveToStorage() {
+            localStorage.setItem('aura_wishlist_items', JSON.stringify(wishlistItems));
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('aura_wishlist_items');
+            if (saved) {
+                try { return JSON.parse(saved); } catch(e) { return SEED_WISHLIST; }
+            }
+            return SEED_WISHLIST;
+        }
+
+        // Navigation Tabs Controller
+        function switchTab(tab) {
+            ['wishlist', 'modeler', 'graveyard'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+                document.getElementById(`tab-${v}`).className = 'px-4 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center space-x-2 text-zinc-400 hover:text-white';
+            });
+
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).className = 'px-4 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center space-x-2 bg-zinc-800 text-white shadow-sm';
+
+            const controls = document.getElementById('wishlist-controls');
+            if (tab === 'wishlist') controls.classList.remove('hidden');
+            else controls.classList.add('hidden');
+
+            if (tab === 'modeler') renderModelerWardrobe();
+            if (tab === 'graveyard') renderGraveyard();
+        }
+
+        // Render Main Wishlist Cards
+        function renderWishlist() {
+            const grid = document.getElementById('wishlist-grid');
+            const activeItems = wishlistItems.filter(item => !item.graveyard);
+
+            document.getElementById('badge-wishlist').innerText = activeItems.length;
+
+            grid.innerHTML = `
+                <div onclick="openAddItemModal()" class="aspect-square rounded-2xl border-2 border-dashed border-zinc-800 hover:border-pink-500/50 bg-zinc-900/40 hover:bg-zinc-900/80 flex flex-col items-center justify-center cursor-pointer transition group">
+                    <div class="w-12 h-12 rounded-2xl bg-zinc-800 group-hover:bg-pink-500/20 flex items-center justify-center text-zinc-400 group-hover:text-pink-400 transition mb-2">
+                        <i data-lucide="plus" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-xs font-medium text-zinc-400 group-hover:text-zinc-200">Add Item / General Idea</span>
+                </div>
+            `;
+
+            activeItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'group relative aspect-square rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden hover:border-zinc-700 transition flex flex-col justify-between p-3';
+
+                if (item.isGeneral) {
+                    const activeOpt = item.options[item.currentOptionIdx || 0] || item.options[0];
+                    card.innerHTML = `
+                        <div class="absolute inset-0 bg-cover bg-center transition-all duration-700 opacity-60 group-hover:opacity-80" style="background-image: url('${activeOpt.image}')"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                        
+                        <div class="relative z-10 flex justify-between items-start">
+                            <span class="px-2 py-0.5 text-[9px] bg-pink-500/80 text-white rounded-full font-bold uppercase tracking-wider backdrop-blur">AI Options Carousel</span>
+                            <button onclick="moveToGraveyard('${item.id}', event)" class="p-1.5 rounded-lg bg-black/40 hover:bg-red-500/80 text-zinc-300 hover:text-white transition backdrop-blur">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+
+                        <div class="relative z-10">
+                            <h4 class="text-xs font-bold text-white lowercase">${item.title}</h4>
+                            <p class="text-[10px] text-pink-300 mt-0.5">${activeOpt.brand} • $${activeOpt.price}</p>
+                            
+                            <button onclick="openAISearchDrawer('${item.id}')" class="mt-2 w-full py-1.5 px-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-[10px] font-medium backdrop-blur flex items-center justify-center space-x-1 transition">
+                                <i data-lucide="sparkles" class="w-3 h-3 text-pink-400"></i>
+                                <span>Explore AI Options</span>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div class="absolute inset-0 bg-cover bg-center transition-all duration-500 group-hover:scale-105" style="background-image: url('${item.image}')"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-80 group-hover:opacity-90"></div>
+                        
+                        <div class="relative z-10 flex justify-between items-start">
+                            <span class="px-2 py-0.5 text-[9px] bg-zinc-800/80 text-zinc-300 rounded-full font-medium uppercase tracking-wider backdrop-blur">${item.type}</span>
+                            <button onclick="moveToGraveyard('${item.id}', event)" class="p-1.5 rounded-lg bg-black/40 hover:bg-red-500/80 text-zinc-300 hover:text-white transition backdrop-blur">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+
+                        <div class="relative z-10">
+                            <h4 class="text-xs font-semibold text-white truncate lowercase">${item.title}</h4>
+                            <div class="flex items-center justify-between mt-0.5">
+                                <span class="text-xs font-bold text-pink-400">$${item.price}</span>
+                                <span class="text-[9px] text-zinc-400 font-medium">${item.material || item.color || ''}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                grid.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        // Automatic Carousel Rotating Animation for General Items (e.g. pink shorts options)
+        function startRotatingCarousels() {
+            setInterval(() => {
+                wishlistItems.forEach(item => {
+                    if (item.isGeneral && item.options && item.options.length > 0) {
+                        item.currentOptionIdx = ((item.currentOptionIdx || 0) + 1) % item.options.length;
+                    }
+                });
+                if (!document.getElementById('view-wishlist').classList.contains('hidden')) {
+                    renderWishlist();
+                }
+            }, 3500);
+        }
+
+        // Search & Filter Handler
+        function applyFilters() {
+            const searchVal = document.getElementById('search-input').value.toLowerCase();
+            const typeVal = document.getElementById('filter-type').value;
+            const colorVal = document.getElementById('filter-color').value;
+
+            const filtered = wishlistItems.filter(item => {
+                if (item.graveyard) return false;
+                const matchesSearch = item.title.toLowerCase().includes(searchVal) ||
+                                     (item.color && item.color.toLowerCase().includes(searchVal)) ||
+                                     (item.material && item.material.toLowerCase().includes(searchVal));
+                const matchesType = typeVal === 'all' || item.type === typeVal;
+                const matchesColor = colorVal === 'all' || (item.color && item.color.toLowerCase() === colorVal);
+                return matchesSearch && matchesType && matchesColor;
+            });
+
+            const grid = document.getElementById('wishlist-grid');
+            grid.innerHTML = `
+                <div onclick="openAddItemModal()" class="aspect-square rounded-2xl border-2 border-dashed border-zinc-800 hover:border-pink-500/50 bg-zinc-900/40 hover:bg-zinc-900/80 flex flex-col items-center justify-center cursor-pointer transition group">
+                    <div class="w-12 h-12 rounded-2xl bg-zinc-800 group-hover:bg-pink-500/20 flex items-center justify-center text-zinc-400 group-hover:text-pink-400 transition mb-2">
+                        <i data-lucide="plus" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-xs font-medium text-zinc-400 group-hover:text-zinc-200">Add Item / General Idea</span>
+                </div>
+            `;
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'group relative aspect-square rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden hover:border-zinc-700 transition flex flex-col justify-between p-3';
+                if (item.isGeneral) {
+                    const activeOpt = item.options[item.currentOptionIdx || 0] || item.options[0];
+                    card.innerHTML = `
+                        <div class="absolute inset-0 bg-cover bg-center opacity-60" style="background-image: url('${activeOpt.image}')"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                        <div class="relative z-10 flex justify-between items-start">
+                            <span class="px-2 py-0.5 text-[9px] bg-pink-500/80 text-white rounded-full font-bold uppercase">AI General Item</span>
+                            <button onclick="moveToGraveyard('${item.id}', event)" class="p-1 rounded-lg bg-black/40 text-zinc-300 hover:text-white">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        <div class="relative z-10">
+                            <h4 class="text-xs font-bold text-white lowercase">${item.title}</h4>
+                            <p class="text-[10px] text-pink-300 mt-0.5">${activeOpt.brand} • $${activeOpt.price}</p>
+                            <button onclick="openAISearchDrawer('${item.id}')" class="mt-2 w-full py-1.5 px-2 bg-white/10 text-white rounded-xl text-[10px] flex items-center justify-center space-x-1">
+                                <i data-lucide="sparkles" class="w-3 h-3 text-pink-400"></i>
+                                <span>Explore AI Options</span>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('${item.image}')"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+                        <div class="relative z-10 flex justify-between items-start">
+                            <span class="px-2 py-0.5 text-[9px] bg-zinc-800/80 text-zinc-300 rounded-full font-medium uppercase">${item.type}</span>
+                            <button onclick="moveToGraveyard('${item.id}', event)" class="p-1 rounded-lg bg-black/40 text-zinc-300 hover:text-white">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        <div class="relative z-10">
+                            <h4 class="text-xs font-semibold text-white truncate lowercase">${item.title}</h4>
+                            <div class="flex items-center justify-between mt-0.5">
+                                <span class="text-xs font-bold text-pink-400">$${item.price}</span>
+                                <span class="text-[9px] text-zinc-400">${item.material || item.color || ''}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        // Add Item Modal Drawer Logic
+        function openAddItemModal() {
+            document.getElementById('add-item-modal').classList.remove('hidden');
+        }
+
+        function closeAddItemModal() {
+            document.getElementById('add-item-modal').classList.add('hidden');
+        }
+
+        function setAddMode(mode) {
+            currentAddMode = mode;
+            if (mode === 'link') {
+                document.getElementById('add-mode-link').className = 'py-2 text-xs font-semibold rounded-lg bg-zinc-800 text-white transition';
+                document.getElementById('add-mode-general').className = 'py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white transition';
+                document.getElementById('form-specific-link').classList.remove('hidden');
+                document.getElementById('form-general-item').classList.add('hidden');
+            } else {
+                document.getElementById('add-mode-general').className = 'py-2 text-xs font-semibold rounded-lg bg-zinc-800 text-white transition';
+                document.getElementById('add-mode-link').className = 'py-2 text-xs font-semibold rounded-lg text-zinc-400 hover:text-white transition';
+                document.getElementById('form-general-item').classList.remove('hidden');
+                document.getElementById('form-specific-link').classList.add('hidden');
+            }
+        }
+
+        function autoFetchMetaData() {
+            const url = document.getElementById('input-item-url').value;
+            if (!url) return alert('Please paste a product URL first.');
+
+            // Metadata parsing simulation
+            document.getElementById('input-item-title').value = 'Marni Mohair Scarf';
+            document.getElementById('input-item-price').value = '290';
+            document.getElementById('input-item-type').value = 'accessories';
+            document.getElementById('input-item-color').value = 'pink';
+            document.getElementById('input-item-material').value = 'Wool';
+            document.getElementById('input-item-img').value = 'https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?auto=format&fit=crop&w=600&q=80';
+        }
+
+        function saveNewItem() {
+            if (currentAddMode === 'link') {
+                const title = document.getElementById('input-item-title').value || 'New Specific Item';
+                const price = parseFloat(document.getElementById('input-item-price').value) || 120;
+                const type = document.getElementById('input-item-type').value;
+                const color = document.getElementById('input-item-color').value || 'pink';
+                const material = document.getElementById('input-item-material').value || 'Cotton';
+                const image = document.getElementById('input-item-img').value || 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=600&q=80';
+
+                wishlistItems.push({
+                    id: Date.now().toString(),
+                    title,
+                    price,
+                    type,
+                    color,
+                    material,
+                    image,
+                    isGeneral: false,
+                    graveyard: false
+                });
+            } else {
+                const query = document.getElementById('input-general-query').value || 'pink shorts';
+                const type = document.getElementById('input-general-type').value;
+
+                wishlistItems.push({
+                    id: Date.now().toString(),
+                    title: query,
+                    price: 0,
+                    type,
+                    color: 'pink',
+                    isGeneral: true,
+                    options: [
+                        { id: Date.now() + '1', title: `${query} Option A`, price: 45, brand: 'H&M', size: 'S', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=600&q=80' },
+                        { id: Date.now() + '2', title: `${query} Option B`, price: 89, brand: 'Zara', size: 'M', image: 'https://images.unsplash.com/photo-1584370848010-d7fe6bc767ec?auto=format&fit=crop&w=600&q=80' },
+                        { id: Date.now() + '3', title: `${query} Option C`, price: 160, brand: 'SSENSE', size: 'S', image: 'https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=600&q=80' }
+                    ],
+                    currentOptionIdx: 0,
+                    graveyard: false
+                });
+            }
+
+            saveToStorage();
+            closeAddItemModal();
+            renderWishlist();
+        }
+
+        // AI Search Options Drawer (MacBook Air - 4)
+        function openAISearchDrawer(itemId) {
+            activeGeneralItemId = itemId;
+            const item = wishlistItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            document.getElementById('ai-search-title').innerText = item.title;
+            renderAIOptions(item.options);
+            document.getElementById('ai-search-modal').classList.remove('hidden');
+        }
+
+        function closeAISearchModal() {
+            document.getElementById('ai-search-modal').classList.add('hidden');
+        }
+
+        function renderAIOptions(options) {
+            const grid = document.getElementById('ai-options-grid');
+            grid.innerHTML = '';
+
+            options.forEach(opt => {
+                const card = document.createElement('div');
+                card.className = 'bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden p-2 flex flex-col justify-between hover:border-pink-500/50 transition';
+                card.innerHTML = `
+                    <div>
+                        <div class="w-full aspect-square rounded-xl bg-cover bg-center mb-2" style="background-image: url('${opt.image}')"></div>
+                        <div class="flex items-center justify-between text-[10px] text-zinc-400">
+                            <span>${opt.brand}</span>
+                            <span class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300">Size ${opt.size}</span>
+                        </div>
+                        <h5 class="text-xs font-semibold text-white mt-1 line-clamp-1">${opt.title}</h5>
+                    </div>
+
+                    <div class="mt-3 flex items-center justify-between pt-2 border-t border-zinc-800">
+                        <span class="text-xs font-bold text-pink-400">$${opt.price}</span>
+                        <button onclick="addSpecificFromAI('${opt.title}', ${opt.price}, '${opt.image}', '${opt.brand}')" class="p-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-lg transition" title="Add to Wishlist">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function filterAIOptions() {
+            const item = wishlistItems.find(i => i.id === activeGeneralItemId);
+            if (!item) return;
+
+            const maxPrice = document.getElementById('ai-filter-price').value;
+            const size = document.getElementById('ai-filter-size').value;
+            const brand = document.getElementById('ai-filter-brand').value;
+
+            const filtered = item.options.filter(opt => {
+                const matchPrice = maxPrice === 'all' || opt.price <= parseInt(maxPrice);
+                const matchSize = size === 'all' || opt.size === size;
+                const matchBrand = brand === 'all' || opt.brand === brand;
+                return matchPrice && matchSize && matchBrand;
+            });
+
+            renderAIOptions(filtered);
+        }
+
+        function addSpecificFromAI(title, price, image, brand) {
+            const parent = wishlistItems.find(i => i.id === activeGeneralItemId);
+            wishlistItems.push({
+                id: Date.now().toString(),
+                title: title,
+                price: price,
+                type: parent ? parent.type : 'bottoms',
+                color: 'pink',
+                material: 'Cotton',
+                image: image,
+                isGeneral: false,
+                graveyard: false
+            });
+
+            saveToStorage();
+            renderWishlist();
+        }
+
+        // Graveyard / Trash Management
+        function moveToGraveyard(id, e) {
+            e.stopPropagation();
+            const item = wishlistItems.find(i => i.id === id);
+            if (item) {
+                item.graveyard = true;
+                saveToStorage();
+                renderWishlist();
+                renderGraveyard();
+            }
+        }
+
+        function restoreFromGraveyard(id) {
+            const item = wishlistItems.find(i => i.id === id);
+            if (item) {
+                item.graveyard = false;
+                saveToStorage();
+                renderWishlist();
+                renderGraveyard();
+            }
+        }
+
+        function renderGraveyard() {
+            const graveyardItems = wishlistItems.filter(i => i.graveyard);
+            document.getElementById('badge-graveyard').innerText = graveyardItems.length;
+
+            const grid = document.getElementById('graveyard-grid');
+            grid.innerHTML = '';
+
+            if (graveyardItems.length === 0) {
+                grid.innerHTML = `<p class="col-span-full text-xs text-zinc-500 text-center py-12">The item graveyard is currently empty.</p>`;
+                return;
+            }
+
+            graveyardItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'aspect-square rounded-2xl bg-zinc-900/50 border border-zinc-800 p-3 flex flex-col justify-between opacity-60 hover:opacity-100 transition relative overflow-hidden';
+                card.innerHTML = `
+                    <div class="absolute inset-0 bg-cover bg-center opacity-30" style="background-image: url('${item.image || (item.options ? item.options[0].image : '')}')"></div>
+                    <div class="relative z-10 flex justify-between items-start">
+                        <span class="px-2 py-0.5 text-[9px] bg-zinc-800 text-zinc-400 rounded-full uppercase">Archived</span>
+                        <button onclick="restoreFromGraveyard('${item.id}')" class="p-1 rounded-lg bg-pink-500/20 hover:bg-pink-500 text-pink-300 hover:text-white transition" title="Restore">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <div class="relative z-10">
+                        <h4 class="text-xs font-semibold text-zinc-300 truncate lowercase">${item.title}</h4>
+                        <span class="text-xs font-bold text-zinc-500">$${item.price}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function clearGraveyard() {
+            wishlistItems = wishlistItems.filter(i => !i.graveyard);
+            saveToStorage();
+            renderGraveyard();
+        }
+
+        // Outfit Modeler Drag & Drop / Click Controllers (MacBook Air - 5)
+        function renderModelerWardrobe(typeFilter = 'all') {
+            const grid = document.getElementById('modeler-wardrobe-grid');
+            grid.innerHTML = '';
+
+            const available = wishlistItems.filter(i => !i.graveyard && !i.isGeneral);
+            const filtered = typeFilter === 'all' ? available : available.filter(i => i.type === typeFilter);
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.draggable = true;
+                card.ondragstart = (e) => handleDragStart(e, item);
+                card.onclick = () => equipItemToModeler(item);
+                
+                card.className = 'aspect-square rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-pink-500/60 p-2 cursor-grab active:cursor-grabbing transition flex flex-col justify-between relative group';
+                card.innerHTML = `
+                    <div class="w-full h-20 rounded-xl bg-cover bg-center" style="background-image: url('${item.image}')"></div>
+                    <div>
+                        <h5 class="text-[11px] font-medium text-zinc-200 line-clamp-1 lowercase">${item.title}</h5>
+                        <span class="text-[10px] font-bold text-pink-400">$${item.price}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterModelerWardrobe(type) {
+            document.querySelectorAll('.modeler-tab-btn').forEach(btn => {
+                btn.className = 'modeler-tab-btn px-3 py-1 text-xs rounded-lg text-zinc-400 hover:text-white';
+            });
+            event.target.className = 'modeler-tab-btn active px-3 py-1 text-xs rounded-lg bg-zinc-800 text-white font-medium';
+            renderModelerWardrobe(type);
+        }
+
+        // Drag & Drop Handlers
+        function handleDragStart(e, item) {
+            e.dataTransfer.setData('text/plain', JSON.stringify(item));
+        }
+
+        function allowDrop(e) {
+            e.preventDefault();
+        }
+
+        function handleDrop(e, slotKey) {
+            e.preventDefault();
+            const data = e.dataTransfer.getData('text/plain');
+            if (data) {
+                const item = JSON.parse(data);
+                equippedItems[slotKey] = item;
+                updateModelerVisuals();
+            }
+        }
+
+        function equipItemToModeler(item) {
+            let slotKey = item.type;
+            if (slotKey === 'jackets') slotKey = 'tops';
+            equippedItems[slotKey] = item;
+            updateModelerVisuals();
+        }
+
+        function unequipSlot(slotKey) {
+            equippedItems[slotKey] = null;
+            updateModelerVisuals();
+        }
+
+        function updateModelerVisuals() {
+            let totalCost = 0;
+
+            Object.keys(equippedItems).forEach(slotKey => {
+                const slotEl = document.getElementById(`slot-${slotKey}`);
+                const placeholder = slotEl.querySelectorAll('.slot-placeholder');
+                const content = slotEl.querySelector('.slot-content');
+
+                const item = equippedItems[slotKey];
+                if (item) {
+                    totalCost += item.price;
+                    placeholder.forEach(p => p.classList.add('hidden'));
+                    content.classList.remove('hidden');
+                    content.innerHTML = `
+                        <div class="w-full h-full bg-cover bg-center relative group" style="background-image: url('${item.image}')">
+                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-[10px] text-white font-semibold">
+                                Unequip
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    placeholder.forEach(p => p.classList.remove('hidden'));
+                    content.classList.add('hidden');
+                }
+            });
+
+            document.getElementById('modeler-total-cost').innerText = `$${totalCost}`;
+        }
+
+        function clearModelerCanvas() {
+            equippedItems = { accessories: null, tops: null, bottoms: null, shoes: null };
+            updateModelerVisuals();
+        }
+
+        function generateAIOutfitSuggestion() {
+            const items = wishlistItems.filter(i => !i.graveyard && !i.isGeneral);
+            const tops = items.filter(i => i.type === 'tops' || i.type === 'jackets');
+            const bottoms = items.filter(i => i.type === 'bottoms');
+            const shoes = items.filter(i => i.type === 'shoes');
+            const accs = items.filter(i => i.type === 'accessories');
+
+            if (tops.length) equippedItems.tops = tops[Math.floor(Math.random() * tops.length)];
+            if (bottoms.length) equippedItems.bottoms = bottoms[Math.floor(Math.random() * bottoms.length)];
+            if (shoes.length) equippedItems.shoes = shoes[Math.floor(Math.random() * shoes.length)];
+            if (accs.length) equippedItems.accessories = accs[Math.floor(Math.random() * accs.length)];
+
+            updateModelerVisuals();
+        }
+    </script>
+</body>
+</html>
