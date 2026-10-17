@@ -15,7 +15,7 @@ const app = express();
 // CHANGE "YOURNAME" to your GitHub username. No trailing slash.
 app.use(cors({
   origin: [
-    "https://YOURNAME.github.io",
+    "https://eldenmartial.github.io",
     "http://localhost:5500",   // VS Code Live Server
     "http://127.0.0.1:5500",
   ],
