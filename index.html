@@ -1,1348 +1,1263 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full bg-white text-zinc-900">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wishlist & Outfit Modeler</title>
+    <title>AURA — AI Wishlist & Outfit Modeler</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#18181b',
+                            600: '#09090b',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    borderRadius: {
+                        'none': '0px',
+                        'sm': '0px',
+                        DEFAULT: '0px',
+                        'md': '0px',
+                        'lg': '0px',
+                        'xl': '0px',
+                        '2xl': '0px',
+                        '3xl': '0px',
+                        'full': '0px',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Three.js for 3D Mannequin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
     <style>
-        :root {
-            --bg-color: #ffffff;
-            --text-color: #111111;
-            --border-color: #000000;
-            --subtle-gray: #f2f2f2;
-            --mid-gray: #767676;
-            --dark-gray: #333333;
-        }
-
         * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            border-radius: 0 !important; /* Force pure sharp corners everywhere */
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            border-radius: 0px !important;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #f4f4f5; }
+        ::-webkit-scrollbar-thumb { background: #a1a1aa; }
+        ::-webkit-scrollbar-thumb:hover { background: #71717a; }
+
+        .square-border {
+            border: 1px solid #e4e4e7;
         }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+        .drag-over {
+            border-color: #18181b !important;
+            background-color: #f4f4f5 !important;
         }
 
-        /* Top Navigation */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 32px;
-            border-bottom: 1px solid var(--border-color);
-            background: #fff;
+        /* Custom Polished Select Dropdown Styling */
+        .custom-select-wrapper {
+            position: relative;
+            display: inline-block;
         }
-
-        .user-title {
-            font-size: 20px;
+        .custom-select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: #ffffff;
+            border: 1px solid #d4d4d8;
+            padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+            font-size: 0.75rem;
             font-weight: 500;
-            letter-spacing: -0.02em;
-        }
-
-        .nav-tabs {
-            display: flex;
-            gap: 24px;
-        }
-
-        .nav-btn {
-            background: none;
-            border: none;
-            font-size: 15px;
+            color: #18181b;
             cursor: pointer;
-            padding: 4px 0;
-            color: var(--mid-gray);
-            border-bottom: 2px solid transparent !important;
-            font-weight: 500;
+            transition: all 0.15s ease-in-out;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-
-        .nav-btn.active {
-            color: var(--text-color);
-            border-bottom: 2px solid var(--border-color) !important;
+        .custom-select:hover {
+            border-color: #18181b;
+            background-color: #fafafa;
         }
-
-        /* Controls Bar */
-        .controls-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 32px;
-            border-bottom: 1px solid var(--subtle-gray);
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .filters-group {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        select, input[type="text"], input[type="number"] {
-            border: 1px solid var(--border-color);
-            padding: 8px 12px;
-            font-size: 13px;
-            background: #fff;
+        .custom-select:focus {
             outline: none;
+            border-color: #09090b;
+            box-shadow: 0 0 0 1px #09090b;
+        }
+        .custom-select-arrow {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            width: 0.75rem;
+            height: 0.75rem;
+            color: #71717a;
+            transition: color 0.15s ease;
+        }
+        .custom-select-wrapper:hover .custom-select-arrow {
+            color: #18181b;
         }
 
-        select:focus, input:focus {
-            border-color: #000;
-        }
-
-        /* Main Layout */
-        main {
-            flex: 1;
-            padding: 32px;
-            position: relative;
-        }
-
-        /* Grid Display */
-        .wishlist-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-        }
-
-        /* Card Styles */
-        .card {
-            border: 1px solid var(--border-color);
-            background: #fff;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            aspect-ratio: 1 / 1.25;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .card-add-trigger {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px dashed var(--border-color);
-            font-size: 32px;
-            color: var(--border-color);
-            background: #fafafa;
-        }
-
-        .card-add-trigger:hover {
-            background: #f0f0f0;
-        }
-
-        .card-img-container {
-            width: 100%;
-            height: 72%;
-            background: var(--subtle-gray);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .card-img {
+        /* 3D Canvas styles */
+        #mannequin-canvas-container {
             width: 100%;
             height: 100%;
-            object-fit: cover;
-        }
-
-        .card-details {
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            flex: 1;
-            background: #fff;
-            border-top: 1px solid var(--subtle-gray);
-        }
-
-        .card-title {
-            font-size: 12px;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .card-price {
-            font-size: 12px;
-            color: var(--dark-gray);
-            font-weight: 600;
-            margin-top: 4px;
-        }
-
-        .card-badge {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            background: #000;
-            color: #fff;
-            font-size: 9px;
-            padding: 3px 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .trash-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: rgba(255,255,255,0.9);
-            border: 1px solid var(--border-color);
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 12px;
-            z-index: 2;
-        }
-
-        .trash-btn:hover {
-            background: #000;
-            color: #fff;
-        }
-
-        /* Side Drawers */
-        .drawer-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.2);
-            z-index: 100;
-            display: none;
-        }
-
-        .drawer-overlay.open {
-            display: block;
-        }
-
-        .drawer {
-            position: fixed;
-            top: 0;
-            right: -480px;
-            width: 440px;
-            height: 100%;
-            background: #fff;
-            border-left: 1px solid var(--border-color);
-            z-index: 101;
-            transition: right 0.25s ease-in-out;
-            display: flex;
-            flex-direction: column;
-            padding: 24px;
-            overflow-y: auto;
-        }
-
-        .drawer.open {
-            right: 0;
-        }
-
-        .drawer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 16px;
-            margin-bottom: 24px;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-
-        .form-group input, .form-group textarea {
-            width: 100%;
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            font-size: 13px;
-        }
-
-        .btn-primary {
-            background: #000;
-            color: #fff;
-            border: 1px solid #000;
-            padding: 12px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .btn-primary:hover {
-            background: #333;
-        }
-
-        /* Drawer Inner Tabs */
-        .drawer-tabs {
-            display: flex;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px;
-        }
-
-        .drawer-tab {
-            flex: 1;
-            padding: 10px;
-            background: none;
-            border: none;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            text-transform: uppercase;
-            color: var(--mid-gray);
-            border-bottom: 2px solid transparent !important;
-        }
-
-        .drawer-tab.active {
-            color: #000;
-            border-bottom: 2px solid #000 !important;
-        }
-
-        /* AI Options Cards in Drawer */
-        .ai-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .ai-item-card {
-            border: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            padding: 8px;
-            background: #fff;
-            position: relative;
-        }
-
-        .ai-item-img {
-            width: 100%;
-            aspect-ratio: 1;
-            object-fit: cover;
-            background: var(--subtle-gray);
-            margin-bottom: 8px;
-        }
-
-        .ai-item-title {
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .ai-item-brand {
-            font-size: 10px;
-            color: var(--mid-gray);
-        }
-
-        .ai-item-price {
-            font-size: 11px;
-            font-weight: 700;
-            margin-top: 4px;
-        }
-
-        .ai-action-btn {
-            background: #000;
-            color: #fff;
-            border: none;
-            padding: 6px;
-            font-size: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 8px;
-            text-transform: uppercase;
-        }
-
-        /* Outfit Modeler Layout */
-        .modeler-container {
-            display: grid;
-            grid-template-columns: 1fr 340px;
-            gap: 32px;
-            height: calc(100vh - 180px);
-        }
-
-        .mannequin-stage {
-            border: 1px solid var(--border-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            background: #fff;
-            overflow: hidden;
-        }
-
-        .silhouette-svg {
-            height: 80%;
-            max-height: 520px;
-            fill: #111;
-            opacity: 0.85;
-        }
-
-        /* Fitting Slot Dropzones */
-        .slot-zone {
-            position: absolute;
-            border: 1px dashed var(--border-color);
-            background: rgba(255, 255, 255, 0.85);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 6px;
-            min-width: 110px;
-            min-height: 110px;
-            z-index: 10;
-        }
-
-        .slot-zone.drag-over {
-            border-style: solid;
-            background: #f0f0f0;
-        }
-
-        .slot-zone-head { top: 8%; left: 18%; }
-        .slot-zone-top { top: 28%; left: 18%; }
-        .slot-zone-bottom { top: 52%; left: 18%; }
-        .slot-zone-shoes { top: 76%; left: 18%; }
-        .slot-zone-accessory { top: 38%; right: 18%; }
-
-        .slot-label {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--mid-gray);
-            margin-bottom: 4px;
-        }
-
-        .slot-card {
-            width: 90px;
-            height: 90px;
-            border: 1px solid var(--border-color);
-            background: #fff;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .slot-card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .slot-card-remove {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: #000;
-            color: #fff;
-            width: 16px;
-            height: 16px;
-            border: none;
-            font-size: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .slot-card-add-wl {
-            position: absolute;
-            bottom: 2px;
-            left: 2px;
-            right: 2px;
-            background: rgba(0,0,0,0.85);
-            color: #fff;
-            border: none;
-            font-size: 9px;
-            padding: 2px;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-
-        /* Sidebar in Modeler */
-        .modeler-sidebar {
-            border: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            background: #fff;
-        }
-
-        .sidebar-header {
-            padding: 16px;
-            border-bottom: 1px solid var(--border-color);
-            background: #fafafa;
-        }
-
-        .sidebar-title {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .sidebar-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .search-box-wrap {
-            display: flex;
-            gap: 4px;
-        }
-
-        .sidebar-items-grid {
-            padding: 16px;
-            overflow-y: auto;
-            flex: 1;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            align-content: start;
-        }
-
-        .sidebar-item {
-            border: 1px solid var(--border-color);
-            aspect-ratio: 1;
-            display: flex;
-            flex-direction: column;
-            background: #fff;
             cursor: grab;
-            position: relative;
         }
-
-        .sidebar-item img {
-            width: 100%;
-            height: 70%;
-            object-fit: cover;
-            background: var(--subtle-gray);
+        #mannequin-canvas-container:active {
+            cursor: grabbing;
         }
-
-        .sidebar-item-info {
-            padding: 4px 6px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            flex: 1;
-        }
-
-        .sidebar-item-name {
-            font-size: 10px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .sidebar-item-price {
-            font-size: 10px;
-            color: var(--dark-gray);
-        }
-
-        /* Budget Counter */
-        .total-counter {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: #fff;
-            border: 1px solid var(--border-color);
-            padding: 12px 16px;
-            font-size: 13px;
-            font-weight: 700;
-            z-index: 10;
-        }
-
-        .btn-clear-search {
-            background: #000;
-            color: #fff;
-            border: none;
-            font-size: 10px;
-            padding: 4px 8px;
-            cursor: pointer;
-            text-transform: uppercase;
-        }
-
-        .hidden { display: none !important; }
     </style>
 </head>
-<body>
+<body class="h-full flex flex-col overflow-hidden bg-white text-zinc-900 selection:bg-zinc-200 selection:text-zinc-900">
 
-    <!-- Header -->
-    <header>
-        <div class="user-title">hi elden</div>
-        <nav class="nav-tabs">
-            <button class="nav-btn active" id="tab-wishlist" onclick="switchView('wishlist')">WISHLIST</button>
-            <button class="nav-btn" id="tab-modeler" onclick="switchView('modeler')">OUTFIT MODELER</button>
-            <button class="nav-btn" id="tab-graveyard" onclick="switchView('graveyard')">GRAVEYARD</button>
-        </nav>
+    <!-- TOP NAVIGATION HEADER -->
+    <header class="h-16 border-b border-zinc-200 bg-white px-6 flex items-center justify-between z-20 flex-shrink-0">
+        <div class="flex items-center space-x-6">
+            <!-- User Name Header -->
+            <div class="flex items-center space-x-2">
+                <span class="text-xs font-semibold uppercase tracking-widest text-zinc-800">hi elden</span>
+            </div>
+
+            <!-- Nav Tabs -->
+            <nav class="flex items-center space-x-0 bg-zinc-100 p-0.5 border border-zinc-200">
+                <button id="tab-wishlist" onclick="switchTab('wishlist')" class="px-4 py-2 text-xs font-medium transition-all flex items-center space-x-2 bg-white text-zinc-900 border border-zinc-300 shadow-sm">
+                    <i data-lucide="grid" class="w-3.5 h-3.5 text-zinc-800"></i>
+                    <span>Wishlist</span>
+                    <span id="badge-wishlist" class="ml-1 px-1.5 py-0.5 text-[10px] bg-zinc-200 text-zinc-800 font-semibold">0</span>
+                </button>
+                <button id="tab-modeler" onclick="switchTab('modeler')" class="px-4 py-2 text-xs font-medium transition-all flex items-center space-x-2 text-zinc-500 hover:text-zinc-900">
+                    <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                    <span>Outfit Modeler</span>
+                </button>
+                <button id="tab-graveyard" onclick="switchTab('graveyard')" class="px-4 py-2 text-xs font-medium transition-all flex items-center space-x-2 text-zinc-500 hover:text-zinc-900">
+                    <i data-lucide="skull" class="w-3.5 h-3.5"></i>
+                    <span>Graveyard</span>
+                    <span id="badge-graveyard" class="ml-1 px-1.5 py-0.5 text-[10px] bg-zinc-200 text-zinc-600">0</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Wishlist Filters & Sort Controls -->
+        <div id="wishlist-controls" class="flex items-center space-x-3">
+            <!-- Category Filter Selector -->
+            <div class="custom-select-wrapper">
+                <select id="filter-type" onchange="applyFilters()" class="custom-select">
+                    <option value="all">All Categories</option>
+                    <option value="tops">Tops</option>
+                    <option value="bottoms">Bottoms</option>
+                    <option value="jackets">Jackets</option>
+                    <option value="shoes">Shoes</option>
+                    <option value="accessories">Accessories</option>
+                </select>
+                <svg class="custom-select-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+
+            <!-- Color Filter Selector -->
+            <div class="custom-select-wrapper">
+                <select id="filter-color" onchange="applyFilters()" class="custom-select">
+                    <option value="all">All Colors</option>
+                    <option value="pink">Pink</option>
+                    <option value="black">Black</option>
+                    <option value="white">White</option>
+                    <option value="brown">Brown</option>
+                    <option value="blue">Blue</option>
+                </select>
+                <svg class="custom-select-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+
+            <!-- Sorting Dropdown -->
+            <div class="custom-select-wrapper">
+                <select id="filter-sort" onchange="applyFilters()" class="custom-select">
+                    <option value="latest">Sort: Latest Added</option>
+                    <option value="oldest">Sort: Oldest Added</option>
+                    <option value="price-low">Sort: Price Low to High</option>
+                    <option value="price-high">Sort: Price High to Low</option>
+                </select>
+                <svg class="custom-select-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+        </div>
     </header>
 
-    <!-- Wishlist Controls -->
-    <div class="controls-bar" id="wishlist-controls">
-        <div class="filters-group">
-            <label style="font-size: 12px; font-weight: 600;">FILTER BY:</label>
-            
-            <select id="filter-category" onchange="renderWishlist()">
-                <option value="ALL">ALL CATEGORIES</option>
-                <option value="Tops">TOPS</option>
-                <option value="Bottoms">BOTTOMS</option>
-                <option value="Shoes">SHOES</option>
-                <option value="Outerwear">OUTERWEAR</option>
-                <option value="Accessories">ACCESSORIES</option>
-            </select>
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 relative overflow-hidden flex bg-white">
 
-            <select id="filter-color" onchange="renderWishlist()">
-                <option value="ALL">ALL COLORS</option>
-                <option value="Pink">PINK</option>
-                <option value="Black">BLACK</option>
-                <option value="White">WHITE</option>
-                <option value="Brown">BROWN</option>
-                <option value="Blue">BLUE</option>
-            </select>
-
-            <select id="filter-sort" onchange="renderWishlist()">
-                <option value="LATEST">SORT: LATEST ADDED</option>
-                <option value="PRICE_LOW">SORT: PRICE LOW TO HIGH</option>
-                <option value="PRICE_HIGH">SORT: PRICE HIGH TO LOW</option>
-            </select>
-        </div>
-    </div>
-
-    <!-- Main View Content -->
-    <main>
-        <!-- WISHLIST VIEW -->
-        <div id="view-wishlist">
-            <div class="wishlist-grid" id="grid-wishlist">
-                <!-- Add Card Trigger -->
-                <div class="card card-add-trigger" onclick="openAddDrawer()">
-                    +
+        <!-- VIEW 1: WISHLIST GRID -->
+        <section id="view-wishlist" class="flex-1 overflow-y-auto p-6 transition-opacity duration-300">
+            <div id="wishlist-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <!-- Add Item Trigger Card -->
+                <div onclick="openAddItemModal()" class="aspect-square border-2 border-dashed border-zinc-300 hover:border-zinc-900 bg-zinc-50 hover:bg-zinc-100 flex flex-col items-center justify-center cursor-pointer transition group p-4 text-center">
+                    <div class="w-10 h-10 bg-white border border-zinc-300 group-hover:border-zinc-900 flex items-center justify-center text-zinc-600 group-hover:text-zinc-900 transition mb-3">
+                        <i data-lucide="plus" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-zinc-700 group-hover:text-zinc-900 uppercase tracking-wider">Add Item</span>
+                    <span class="text-[10px] text-zinc-400 mt-1">Link or General Idea</span>
                 </div>
-                <!-- Dynamic cards render here -->
+
+                <!-- Dynamic Item Cards Rendered Here -->
             </div>
-        </div>
+        </section>
 
-        <!-- GRAVEYARD VIEW -->
-        <div id="view-graveyard" class="hidden">
-            <div class="wishlist-grid" id="grid-graveyard">
-                <!-- Deleted items render here -->
-            </div>
-        </div>
-
-        <!-- OUTFIT MODELER VIEW -->
-        <div id="view-modeler" class="hidden">
-            <div class="modeler-container">
-                <!-- Mannequin Fitting Area -->
-                <div class="mannequin-stage">
-                    <div class="total-counter" id="outfit-total">OUTFIT TOTAL: $0</div>
-
-                    <!-- Clean Androgynous Silhouette -->
-                    <svg class="silhouette-svg" viewBox="0 0 100 220">
-                        <!-- Head -->
-                        <circle cx="50" cy="22" r="11" />
-                        <!-- Neck -->
-                        <rect x="47" y="33" width="6" height="8" />
-                        <!-- Torso/Shoulders -->
-                        <path d="M 28 42 L 72 42 L 66 110 L 34 110 Z" />
-                        <!-- Arms -->
-                        <path d="M 27 43 L 18 105 L 23 107 L 31 50 Z" />
-                        <!-- Left Arm -->
-                        <path d="M 73 43 L 82 105 L 77 107 L 69 50 Z" />
-                        <!-- Right Arm -->
-                        <!-- Legs -->
-                        <rect x="36" y="112" width="11" height="85" />
-                        <rect x="53" y="112" width="11" height="85" />
-                        <!-- Feet -->
-                        <path d="M 33 197 L 47 197 L 47 203 L 31 203 Z" />
-                        <path d="M 53 197 L 67 197 L 69 203 L 53 203 Z" />
-                    </svg>
-
-                    <!-- Slot Dropzones -->
-                    <div class="slot-zone slot-zone-head" data-slot="Head" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Head')">
-                        <span class="slot-label">HEAD</span>
-                        <div id="slot-content-Head"></div>
-                    </div>
-
-                    <div class="slot-zone slot-zone-top" data-slot="Tops" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Tops')">
-                        <span class="slot-label">TOPS / OUTER</span>
-                        <div id="slot-content-Tops"></div>
-                    </div>
-
-                    <div class="slot-zone slot-zone-bottom" data-slot="Bottoms" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Bottoms')">
-                        <span class="slot-label">BOTTOMS</span>
-                        <div id="slot-content-Bottoms"></div>
-                    </div>
-
-                    <div class="slot-zone slot-zone-shoes" data-slot="Shoes" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Shoes')">
-                        <span class="slot-label">SHOES</span>
-                        <div id="slot-content-Shoes"></div>
-                    </div>
-
-                    <div class="slot-zone slot-zone-accessory" data-slot="Accessories" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Accessories')">
-                        <span class="slot-label">ACCESSORIES</span>
-                        <div id="slot-content-Accessories"></div>
+        <!-- VIEW 2: OUTFIT MODELER -->
+        <section id="view-modeler" class="flex-1 hidden flex overflow-hidden">
+            <!-- Left: 3D Interactive Mannequin Visual Canvas -->
+            <div class="flex-1 bg-zinc-50 flex flex-col items-center justify-center p-6 relative border-r border-zinc-200">
+                
+                <!-- Controls Header -->
+                <div class="absolute top-4 left-4 flex items-center space-x-2 z-10">
+                    <button onclick="clearModelerCanvas()" class="px-3 py-1.5 text-xs text-zinc-700 hover:text-zinc-900 bg-white border border-zinc-300 flex items-center space-x-1.5 hover:bg-zinc-100 transition shadow-sm">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        <span>Reset Outfit</span>
+                    </button>
+                    <div class="px-3 py-1.5 text-[10px] uppercase tracking-wider text-zinc-500 bg-white border border-zinc-300 shadow-sm flex items-center space-x-1">
+                        <i data-lucide="move-horizontal" class="w-3 h-3 text-zinc-800"></i>
+                        <span>Drag Left / Right to Rotate 3D Model</span>
                     </div>
                 </div>
 
-                <!-- Modeler Sidebar -->
-                <div class="modeler-sidebar">
-                    <div class="sidebar-header">
-                        <div class="sidebar-title">
-                            <span id="sidebar-mode-label">WISHLIST ITEMS</span>
-                            <button id="btn-clear-search" class="btn-clear-search hidden" onclick="clearModelerSearch()">SHOW WISHLIST</button>
+                <!-- Outfit Cost Badge -->
+                <div class="absolute top-4 right-4 bg-white border border-zinc-300 px-4 py-2 text-right z-10 shadow-sm">
+                    <div class="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Total Look Cost</div>
+                    <div id="modeler-total-cost" class="text-lg font-bold text-zinc-900">$0</div>
+                </div>
+
+                <!-- 3D Three.js Mannequin Container -->
+                <div id="mannequin-canvas-container" class="absolute inset-0 z-0"></div>
+
+                <!-- Target Equipment Slots (Overlay Rectangles) -->
+                <div class="relative z-10 w-full max-w-sm h-[82vh] pointer-events-none flex flex-col items-center justify-between py-4">
+                    
+                    <!-- Accessories Slot -->
+                    <div id="slot-accessories" 
+                         ondrop="handleDrop(event, 'accessories')" 
+                         ondragover="allowDrop(event)" 
+                         onclick="unequipSlot('accessories')" 
+                         class="pointer-events-auto w-28 h-20 border-2 border-dashed border-zinc-300 hover:border-zinc-900 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center relative cursor-pointer group transition shadow-sm overflow-hidden">
+                        <i data-lucide="glasses" class="w-4 h-4 text-zinc-400 group-hover:text-zinc-800 slot-placeholder"></i>
+                        <span class="text-[10px] text-zinc-500 mt-1 font-medium uppercase slot-placeholder">Accessories</span>
+                        <div class="slot-content absolute inset-0 hidden"></div>
+                    </div>
+
+                    <!-- Tops / Jackets Slot -->
+                    <div id="slot-tops" 
+                         ondrop="handleDrop(event, 'tops')" 
+                         ondragover="allowDrop(event)" 
+                         onclick="unequipSlot('tops')" 
+                         class="pointer-events-auto w-40 h-36 border-2 border-dashed border-zinc-300 hover:border-zinc-900 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center relative cursor-pointer group transition shadow-sm overflow-hidden my-auto">
+                        <i data-lucide="shirt" class="w-5 h-5 text-zinc-400 group-hover:text-zinc-800 slot-placeholder"></i>
+                        <span class="text-[10px] text-zinc-500 mt-1 font-medium uppercase slot-placeholder">Tops / Outerwear</span>
+                        <div class="slot-content absolute inset-0 hidden"></div>
+                    </div>
+
+                    <!-- Bottoms Slot -->
+                    <div id="slot-bottoms" 
+                         ondrop="handleDrop(event, 'bottoms')" 
+                         ondragover="allowDrop(event)" 
+                         onclick="unequipSlot('bottoms')" 
+                         class="pointer-events-auto w-40 h-36 border-2 border-dashed border-zinc-300 hover:border-zinc-900 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center relative cursor-pointer group transition shadow-sm overflow-hidden mb-auto">
+                        <i data-lucide="scissors" class="w-5 h-5 text-zinc-400 group-hover:text-zinc-800 slot-placeholder"></i>
+                        <span class="text-[10px] text-zinc-500 mt-1 font-medium uppercase slot-placeholder">Bottoms</span>
+                        <div class="slot-content absolute inset-0 hidden"></div>
+                    </div>
+
+                    <!-- Shoes Slot -->
+                    <div id="slot-shoes" 
+                         ondrop="handleDrop(event, 'shoes')" 
+                         ondragover="allowDrop(event)" 
+                         onclick="unequipSlot('shoes')" 
+                         class="pointer-events-auto w-32 h-20 border-2 border-dashed border-zinc-300 hover:border-zinc-900 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center relative cursor-pointer group transition shadow-sm overflow-hidden">
+                        <i data-lucide="footprints" class="w-4 h-4 text-zinc-400 group-hover:text-zinc-800 slot-placeholder"></i>
+                        <span class="text-[10px] text-zinc-500 mt-1 font-medium uppercase slot-placeholder">Shoes</span>
+                        <div class="slot-content absolute inset-0 hidden"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right: Wardrobe Picker Panel -->
+            <div class="w-96 bg-white border-l border-zinc-200 flex flex-col">
+                <div class="p-4 border-b border-zinc-200">
+                    <h3 class="text-xs font-bold text-zinc-900 uppercase tracking-wider">Wardrobe Library</h3>
+                    <p class="text-[11px] text-zinc-500 mt-0.5">Drag items onto mannequin slots or tap to equip</p>
+                    
+                    <!-- Search Input with Auto-Restore on Backspace/Clear -->
+                    <div class="mt-3 relative">
+                        <input type="text" id="modeler-search-input" oninput="handleModelerSearch(event)" placeholder="Search wardrobe items..." 
+                            class="w-full bg-zinc-50 border border-zinc-300 pl-8 pr-8 py-1.5 text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 transition">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2"></i>
+                        <button id="clear-search-btn" onclick="clearModelerSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-900">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modeler Category Sub-tabs -->
+                <div class="p-2 bg-zinc-50 flex space-x-1 border-b border-zinc-200 overflow-x-auto">
+                    <button onclick="filterModelerWardrobe('all')" class="modeler-tab-btn active px-3 py-1 text-xs border border-zinc-900 bg-zinc-900 text-white font-medium">All</button>
+                    <button onclick="filterModelerWardrobe('tops')" class="modeler-tab-btn px-3 py-1 text-xs border border-zinc-300 bg-white text-zinc-700 hover:text-zinc-900">Tops</button>
+                    <button onclick="filterModelerWardrobe('bottoms')" class="modeler-tab-btn px-3 py-1 text-xs border border-zinc-300 bg-white text-zinc-700 hover:text-zinc-900">Bottoms</button>
+                    <button onclick="filterModelerWardrobe('shoes')" class="modeler-tab-btn px-3 py-1 text-xs border border-zinc-300 bg-white text-zinc-700 hover:text-zinc-900">Shoes</button>
+                    <button onclick="filterModelerWardrobe('accessories')" class="modeler-tab-btn px-3 py-1 text-xs border border-zinc-300 bg-white text-zinc-700 hover:text-zinc-900">Acc</button>
+                </div>
+
+                <!-- Wardrobe Items Grid -->
+                <div id="modeler-wardrobe-grid" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-3">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: ARCHIVE / GRAVEYARD -->
+        <section id="view-graveyard" class="flex-1 overflow-y-auto p-6 hidden">
+            <div class="max-w-5xl mx-auto">
+                <div class="mb-6 flex items-center justify-between border-b border-zinc-200 pb-4">
+                    <div>
+                        <h2 class="text-sm font-bold text-zinc-900 uppercase tracking-wider flex items-center space-x-2">
+                            <i data-lucide="skull" class="w-4 h-4 text-zinc-500"></i>
+                            <span>The Item Graveyard</span>
+                        </h2>
+                        <p class="text-xs text-zinc-500 mt-1">Archived items you've removed or acquired. Restore anytime.</p>
+                    </div>
+                    <button onclick="clearGraveyard()" class="px-3 py-1.5 text-xs bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 transition font-medium">
+                        Permanently Clear All
+                    </button>
+                </div>
+
+                <div id="graveyard-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <!-- Graveyard items rendered here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- MODAL 1: ADD ITEM SLIDE-OVER -->
+        <div id="add-item-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex justify-end transition-all">
+            <div class="w-full max-w-md bg-white border-l border-zinc-200 h-full p-6 flex flex-col justify-between shadow-2xl">
+                <div>
+                    <div class="flex items-center justify-between border-b border-zinc-200 pb-4 mb-6">
+                        <h3 class="text-sm font-bold text-zinc-900 uppercase tracking-wider flex items-center space-x-2">
+                            <i data-lucide="plus" class="w-4 h-4 text-zinc-900"></i>
+                            <span>Add New Item</span>
+                        </h3>
+                        <button onclick="closeAddItemModal()" class="text-zinc-400 hover:text-zinc-900 p-1">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Mode Toggle -->
+                    <div class="grid grid-cols-2 gap-0 border border-zinc-300 p-0.5 bg-zinc-100 mb-6">
+                        <button id="add-mode-link" onclick="setAddMode('link')" class="py-2 text-xs font-semibold bg-white text-zinc-900 border border-zinc-300 shadow-sm transition">Specific Product Link</button>
+                        <button id="add-mode-general" onclick="setAddMode('general')" class="py-2 text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition">General Item / Idea</button>
+                    </div>
+
+                    <!-- Form A: Specific Item URL Link Only -->
+                    <div id="form-specific-link" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-700 uppercase tracking-wider mb-2">Item Web Link (URL)</label>
+                            <input type="url" id="input-item-url" placeholder="Paste item URL (e.g. https://www.ssense.com/...)" 
+                                class="w-full bg-white border border-zinc-300 px-3 py-2 text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900">
                         </div>
-                        <div class="sidebar-controls">
-                            <select id="modeler-filter-type" onchange="renderModelerSidebar()">
-                                <option value="ALL">ALL CLOTHING TYPES</option>
-                                <option value="Tops">TOPS</option>
-                                <option value="Bottoms">BOTTOMS</option>
-                                <option value="Shoes">SHOES</option>
-                                <option value="Outerwear">OUTERWEAR</option>
-                                <option value="Accessories">ACCESSORIES</option>
-                            </select>
-                            
-                            <div class="search-box-wrap">
-                                <input type="text" id="modeler-search-input" placeholder="Search new items..." style="flex:1;" onkeydown="if(event.key==='Enter') executeModelerSearch()">
-                                <button class="btn-primary" style="width: auto; padding: 0 12px;" onclick="executeModelerSearch()">AI SEARCH</button>
+                        <p class="text-[11px] text-zinc-500 leading-relaxed">
+                            Paste a product URL and click save. The app will fetch details, image, category, and price automatically.
+                        </p>
+                    </div>
+
+                    <!-- Form B: General Item Description Only -->
+                    <div id="form-general-item" class="space-y-4 hidden">
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-700 uppercase tracking-wider mb-2">General Item Description</label>
+                            <input type="text" id="input-general-query" placeholder="e.g., pink shorts, leather jacket..." 
+                                class="w-full bg-white border border-zinc-300 px-3 py-2 text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900">
+                        </div>
+                        <p class="text-[11px] text-zinc-500 leading-relaxed">
+                            Create a general wishlist card. You can explore AI options, save favorites to that item, and transfer specific items into your main wishlist anytime.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-zinc-200 flex space-x-3">
+                    <button onclick="closeAddItemModal()" class="flex-1 py-2 text-xs font-medium bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-300 transition">Cancel</button>
+                    <button onclick="saveNewItem()" class="flex-1 py-2 text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-white transition">Save Item</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL 2: GENERAL ITEM AI OPTIONS & SAVED ITEMS SIDE DRAWER -->
+        <div id="ai-search-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex justify-end transition-all">
+            <div class="w-full max-w-2xl bg-white border-l border-zinc-200 h-full p-6 flex flex-col justify-between shadow-2xl">
+                <div class="flex-1 flex flex-col overflow-hidden">
+                    <!-- Drawer Header -->
+                    <div class="flex items-center justify-between border-b border-zinc-200 pb-4 mb-4 flex-shrink-0">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h3 id="ai-search-title" class="text-sm font-bold uppercase tracking-wider text-zinc-900">General Item</h3>
+                                <span class="px-2 py-0.5 text-[10px] bg-zinc-100 text-zinc-800 border border-zinc-300 font-semibold">AI Assistant</span>
                             </div>
+                            <p class="text-xs text-zinc-500 mt-0.5">Explore real-time web options and manage saved ideas for this item</p>
+                        </div>
+                        <button onclick="closeAISearchModal()" class="text-zinc-400 hover:text-zinc-900 p-1">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Inner Drawer Tab Bar -->
+                    <div class="flex border-b border-zinc-200 mb-4 flex-shrink-0">
+                        <button id="ai-tab-search" onclick="switchAIOptionTab('search')" class="px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 border-zinc-900 text-zinc-900 flex items-center space-x-2">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                            <span>AI Suggestions</span>
+                        </button>
+                        <button id="ai-tab-saved" onclick="switchAIOptionTab('saved')" class="px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 border-transparent text-zinc-500 hover:text-zinc-900 flex items-center space-x-2">
+                            <i data-lucide="bookmark" class="w-3.5 h-3.5"></i>
+                            <span>Saved Items</span>
+                            <span id="badge-ai-saved" class="ml-1 px-1.5 py-0.2 text-[10px] bg-zinc-200 text-zinc-800 font-semibold">0</span>
+                        </button>
+                    </div>
+
+                    <!-- SUB-VIEW 1: AI SUGGESTIONS GRID -->
+                    <div id="ai-view-search" class="flex-1 overflow-y-auto pr-1">
+                        <div id="ai-options-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <!-- Dynamically filled -->
                         </div>
                     </div>
 
-                    <div class="sidebar-items-grid" id="modeler-sidebar-grid">
-                        <!-- Items rendered here -->
+                    <!-- SUB-VIEW 2: SAVED ITEMS TAB WITHIN GENERAL ITEM -->
+                    <div id="ai-view-saved" class="flex-1 overflow-y-auto pr-1 hidden">
+                        <div id="ai-saved-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <!-- Dynamically filled -->
+                        </div>
                     </div>
+                </div>
+
+                <div class="pt-4 border-t border-zinc-200 flex justify-between items-center text-xs text-zinc-500 flex-shrink-0">
+                    <span class="text-[11px]">* Transferring an item puts it on the main grid & removes it from here.</span>
+                    <button onclick="closeAISearchModal()" class="px-4 py-2 bg-zinc-900 text-white font-semibold transition">Close</button>
                 </div>
             </div>
         </div>
+
     </main>
 
-    <!-- DRAWER OVERLAY -->
-    <div class="drawer-overlay" id="drawer-overlay" onclick="closeAllDrawers()"></div>
-
-    <!-- ADD ITEM DRAWER -->
-    <div class="drawer" id="add-drawer">
-        <div class="drawer-header">
-            <h3 style="font-size: 14px; text-transform: uppercase;">ADD ITEM</h3>
-            <button class="close-btn" onclick="closeAllDrawers()">✕</button>
-        </div>
-
-        <div class="form-group">
-            <label>PASTE SPECIFIC ITEM LINK</label>
-            <input type="text" id="add-link-input" placeholder="https://store.com/item-url...">
-            <button class="btn-primary" style="margin-top: 8px;" onclick="addSpecificItem()">ADD LINK ITEM</button>
-        </div>
-
-        <div style="text-align: center; font-size: 11px; color: var(--mid-gray); margin: 20px 0;">— OR —</div>
-
-        <div class="form-group">
-            <label>GENERAL ITEM IDEA</label>
-            <textarea id="add-general-input" rows="3" placeholder="describe what you want (e.g. pink shorts, leather trench coat)..."></textarea>
-            <button class="btn-primary" style="margin-top: 8px;" onclick="addGeneralItem()">CREATE GENERAL IDEA</button>
-        </div>
-    </div>
-
-    <!-- GENERAL ITEM AI OPTIONS DRAWER -->
-    <div class="drawer" id="ai-drawer">
-        <div class="drawer-header">
-            <h3 style="font-size: 14px; text-transform: uppercase;" id="ai-drawer-title">PINK SHORTS</h3>
-            <button class="close-btn" onclick="closeAllDrawers()">✕</button>
-        </div>
-
-        <div class="drawer-tabs">
-            <button class="drawer-tab active" id="tab-ai-search" onclick="switchDrawerTab('search')">AI DISCOVER</button>
-            <button class="drawer-tab" id="tab-ai-saved" onclick="switchDrawerTab('saved')">SAVED OPTIONS (<span id="saved-count">0</span>)</button>
-        </div>
-
-        <!-- SEARCH TAB -->
-        <div id="drawer-view-search">
-            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-                <select id="ai-filter-price" style="flex: 1;" onchange="renderAiDiscover()">
-                    <option value="ALL">ANY PRICE</option>
-                    <option value="UNDER_50">UNDER $50</option>
-                    <option value="50_150">$50 - $150</option>
-                    <option value="OVER_150">OVER $150</option>
-                </select>
-                <select id="ai-filter-size" style="flex: 1;">
-                    <option value="ALL">ALL SIZES</option>
-                    <option value="S">SMALL (S)</option>
-                    <option value="M">MEDIUM (M)</option>
-                    <option value="L">LARGE (L)</option>
-                </select>
-            </div>
-
-            <div class="ai-grid" id="ai-discover-grid">
-                <!-- AI results rendered here -->
-            </div>
-        </div>
-
-        <!-- SAVED TAB -->
-        <div id="drawer-view-saved" class="hidden">
-            <div class="ai-grid" id="ai-saved-grid">
-                <!-- Saved items rendered here -->
-            </div>
-        </div>
-    </div>
-
+    <!-- APPLICATION LOGIC & 3D MANNEQUIN RENDERER -->
     <script>
-        // Data State
-        let wishlistData = [
+        // Seed Initial Data
+        const SEED_WISHLIST = [
             {
                 id: '1',
-                type: 'specific',
                 title: 'Mohair Pink Sweater',
                 price: 214,
-                category: 'Tops',
-                color: 'Pink',
-                image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=400&auto=format&fit=crop&q=60',
-                dateAdded: 1000
+                type: 'tops',
+                color: 'pink',
+                material: 'Mohair',
+                image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=600&q=80',
+                isGeneral: false,
+                graveyard: false,
+                createdAt: 1000
             },
             {
                 id: '2',
-                type: 'general',
                 title: 'Pink Shorts',
-                category: 'Bottoms',
-                color: 'Pink',
-                dateAdded: 2000,
+                price: 0,
+                type: 'bottoms',
+                color: 'pink',
+                isGeneral: true,
+                createdAt: 2000,
+                options: [
+                    { id: 'opt1', title: 'H&M Linen Shorts', price: 29, brand: 'H&M', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=600&q=80' },
+                    { id: 'opt2', title: 'Zara Bermuda Shorts', price: 49, brand: 'Zara', image: 'https://images.unsplash.com/photo-1584370848010-d7fe6bc767ec?auto=format&fit=crop&w=600&q=80' },
+                    { id: 'opt3', title: 'SSENSE Tailored Shorts', price: 215, brand: 'SSENSE', image: 'https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=600&q=80' }
+                ],
                 savedOptions: [
-                    {
-                        id: 'opt-1',
-                        title: 'H&M Linen Pink Shorts',
-                        brand: 'H&M',
-                        price: 35,
-                        category: 'Bottoms',
-                        color: 'Pink',
-                        image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&auto=format&fit=crop&q=60'
-                    }
-                ]
+                    { id: 'saved1', title: 'Zara Bermuda Shorts', price: 49, brand: 'Zara', image: 'https://images.unsplash.com/photo-1584370848010-d7fe6bc767ec?auto=format&fit=crop&w=600&q=80' }
+                ],
+                graveyard: false
+            },
+            {
+                id: '3',
+                title: 'Leather Jacket',
+                price: 480,
+                type: 'jackets',
+                color: 'black',
+                material: 'Leather',
+                image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=600&q=80',
+                isGeneral: false,
+                graveyard: false,
+                createdAt: 3000
+            },
+            {
+                id: '4',
+                title: 'Platform Loafers',
+                price: 195,
+                type: 'shoes',
+                color: 'black',
+                material: 'Leather',
+                image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&q=80',
+                isGeneral: false,
+                graveyard: false,
+                createdAt: 4000
+            },
+            {
+                id: '5',
+                title: 'Leather Shoulder Bag',
+                price: 320,
+                type: 'accessories',
+                color: 'brown',
+                material: 'Leather',
+                image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80',
+                isGeneral: false,
+                graveyard: false,
+                createdAt: 5000
             }
         ];
 
-        let graveyardData = [];
+        // State Variables
+        let wishlistItems = loadFromStorage();
+        let equippedItems = { accessories: null, tops: null, bottoms: null, shoes: null };
+        let currentAddMode = 'link';
         let activeGeneralItemId = null;
-        let outfitSlots = {
-            Head: null,
-            Tops: null,
-            Bottoms: null,
-            Shoes: null,
-            Accessories: null
-        };
+        let activeAIDrawerSubTab = 'search';
+        let currentModelerFilter = 'all';
 
-        let modelerSearchResults = null; // null means showing wishlist
-
-        // Mock AI Database Pool
-        const mockAiDatabase = [
-            { id: 'ai-1', title: 'Zara High-Waist Pink Shorts', brand: 'Zara', price: 45, category: 'Bottoms', color: 'Pink', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&auto=format&fit=crop&q=60' },
-            { id: 'ai-2', title: 'Jacquemus Pink Tailored Shorts', brand: 'Jacquemus', price: 280, category: 'Bottoms', color: 'Pink', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&auto=format&fit=crop&q=60' },
-            { id: 'ai-3', title: 'Acne Studios Pink Cotton Shorts', brand: 'Acne Studios', price: 190, category: 'Bottoms', color: 'Pink', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&auto=format&fit=crop&q=60' },
-            { id: 'ai-4', title: 'Ganni Pleated Pink Shorts', brand: 'Ganni', price: 120, category: 'Bottoms', color: 'Pink', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&auto=format&fit=crop&q=60' },
-            { id: 'ai-5', title: 'Black Oversized Leather Jacket', brand: 'Acne Studios', price: 650, category: 'Outerwear', color: 'Black', image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&auto=format&fit=crop&q=60' },
-            { id: 'ai-6', title: 'White Chunky Sneakers', brand: 'Balenciaga', price: 890, category: 'Shoes', color: 'White', image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&auto=format&fit=crop&q=60' },
-            { id: 'ai-7', title: 'Classic Leather Tote', brand: 'Saint Laurent', price: 1250, category: 'Accessories', color: 'Black', image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&auto=format&fit=crop&q=60' }
-        ];
-
-        // Initialization
-        window.onload = () => {
+        // Initialize Application
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
             renderWishlist();
-            renderModelerSidebar();
-        };
+            renderModelerWardrobe();
+            renderGraveyard();
+            init3DMannequin();
+        });
 
-        // Navigation
-        function switchView(viewName) {
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`tab-${viewName}`).classList.add('active');
-
-            document.getElementById('view-wishlist').classList.add('hidden');
-            document.getElementById('view-graveyard').classList.add('hidden');
-            document.getElementById('view-modeler').classList.add('hidden');
-
-            document.getElementById('wishlist-controls').style.display = viewName === 'wishlist' ? 'flex' : 'none';
-
-            if (viewName === 'wishlist') {
-                document.getElementById('view-wishlist').classList.remove('hidden');
-                renderWishlist();
-            } else if (viewName === 'graveyard') {
-                document.getElementById('view-graveyard').classList.remove('hidden');
-                renderGraveyard();
-            } else if (viewName === 'modeler') {
-                document.getElementById('view-modeler').classList.remove('hidden');
-                renderModelerSidebar();
-            }
+        // Local Storage Helpers
+        function saveToStorage() {
+            localStorage.setItem('aura_wishlist_items_v3', JSON.stringify(wishlistItems));
         }
 
-        // Render Wishlist Grid
-        function renderWishlist() {
-            const grid = document.getElementById('grid-wishlist');
-            grid.innerHTML = `<div class="card card-add-trigger" onclick="openAddDrawer()">+</div>`;
+        function loadFromStorage() {
+            const saved = localStorage.getItem('aura_wishlist_items_v3');
+            if (saved) {
+                try { return JSON.parse(saved); } catch(e) { return SEED_WISHLIST; }
+            }
+            return SEED_WISHLIST;
+        }
 
-            const catFilter = document.getElementById('filter-category').value;
-            const colorFilter = document.getElementById('filter-color').value;
-            const sortFilter = document.getElementById('filter-sort').value;
-
-            let items = wishlistData.filter(item => {
-                if (catFilter !== 'ALL' && item.category !== catFilter) return false;
-                if (colorFilter !== 'ALL' && item.color !== colorFilter) return false;
-                return true;
+        // Navigation Tabs Controller
+        function switchTab(tab) {
+            ['wishlist', 'modeler', 'graveyard'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+                document.getElementById(`tab-${v}`).className = 'px-4 py-2 text-xs font-medium transition-all flex items-center space-x-2 text-zinc-500 hover:text-zinc-900';
             });
 
-            if (sortFilter === 'PRICE_LOW') {
-                items.sort((a,b) => (a.price || 0) - (b.price || 0));
-            } else if (sortFilter === 'PRICE_HIGH') {
-                items.sort((a,b) => (b.price || 0) - (a.price || 0));
-            } else {
-                items.sort((a,b) => b.dateAdded - a.dateAdded);
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).className = 'px-4 py-2 text-xs font-medium transition-all flex items-center space-x-2 bg-white text-zinc-900 border border-zinc-300 shadow-sm';
+
+            const controls = document.getElementById('wishlist-controls');
+            if (tab === 'wishlist') controls.classList.remove('hidden');
+            else controls.classList.add('hidden');
+
+            if (tab === 'modeler') {
+                renderModelerWardrobe();
+                onWindowResize3D();
+            }
+            if (tab === 'graveyard') renderGraveyard();
+        }
+
+        // Main Wishlist Render Pipeline
+        function renderWishlist() {
+            const grid = document.getElementById('wishlist-grid');
+            let itemsToDisplay = wishlistItems.filter(item => !item.graveyard);
+
+            const typeVal = document.getElementById('filter-type').value;
+            const colorVal = document.getElementById('filter-color').value;
+            const sortVal = document.getElementById('filter-sort').value;
+
+            if (typeVal !== 'all') {
+                itemsToDisplay = itemsToDisplay.filter(i => i.type === typeVal);
             }
 
-            items.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'card';
+            if (colorVal !== 'all') {
+                itemsToDisplay = itemsToDisplay.filter(i => i.color && i.color.toLowerCase() === colorVal);
+            }
 
-                if (item.type === 'specific') {
+            itemsToDisplay.sort((a, b) => {
+                if (sortVal === 'price-low') return (a.price || 0) - (b.price || 0);
+                if (sortVal === 'price-high') return (b.price || 0) - (a.price || 0);
+                if (sortVal === 'oldest') return (a.createdAt || 0) - (b.createdAt || 0);
+                return (b.createdAt || 0) - (a.createdAt || 0);
+            });
+
+            document.getElementById('badge-wishlist').innerText = wishlistItems.filter(i => !i.graveyard).length;
+
+            grid.innerHTML = `
+                <div onclick="openAddItemModal()" class="aspect-square border-2 border-dashed border-zinc-300 hover:border-zinc-900 bg-zinc-50 hover:bg-zinc-100 flex flex-col items-center justify-center cursor-pointer transition group p-4 text-center">
+                    <div class="w-10 h-10 bg-white border border-zinc-300 group-hover:border-zinc-900 flex items-center justify-center text-zinc-600 group-hover:text-zinc-900 transition mb-3">
+                        <i data-lucide="plus" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-zinc-700 group-hover:text-zinc-900 uppercase tracking-wider">Add Item</span>
+                    <span class="text-[10px] text-zinc-400 mt-1">Link or General Idea</span>
+                </div>
+            `;
+
+            itemsToDisplay.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'group relative aspect-square bg-white border border-zinc-300 p-3 flex flex-col justify-between hover:border-zinc-900 transition overflow-hidden';
+
+                if (item.isGeneral) {
+                    const savedCount = item.savedOptions ? item.savedOptions.length : 0;
+                    card.onclick = () => openAISearchDrawer(item.id);
+                    card.classList.add('cursor-pointer');
+
                     card.innerHTML = `
-                        <button class="trash-btn" onclick="moveToGraveyard(event, '${item.id}')">✕</button>
-                        <div class="card-img-container">
-                            <img src="${item.image}" class="card-img" alt="${item.title}">
+                        <div class="flex justify-between items-start z-10">
+                            <span class="px-2 py-0.5 text-[9px] bg-zinc-900 text-white font-bold uppercase tracking-wider">General Idea</span>
+                            <button onclick="moveToGraveyard('${item.id}', event)" class="p-1 hover:bg-zinc-100 text-zinc-400 hover:text-zinc-900 transition" title="Move to Graveyard">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
                         </div>
-                        <div class="card-details">
-                            <div class="card-title">${item.title}</div>
-                            <div class="card-price">$${item.price}</div>
+
+                        <div class="my-auto text-center py-2">
+                            <h4 class="text-xs font-bold text-zinc-900 uppercase tracking-wide line-clamp-2">${item.title}</h4>
+                            <p class="text-[10px] text-zinc-500 mt-1">${savedCount} Saved Ideas</p>
+                        </div>
+
+                        <div class="z-10 pt-2 border-t border-zinc-200 flex items-center justify-between text-[10px] text-zinc-700 font-medium">
+                            <span class="flex items-center space-x-1">
+                                <i data-lucide="sparkles" class="w-3 h-3 text-zinc-800"></i>
+                                <span>AI Drawer</span>
+                            </span>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-900"></i>
                         </div>
                     `;
                 } else {
-                    // General Idea rotating concept card
-                    card.onclick = () => openAiDrawer(item.id);
                     card.innerHTML = `
-                        <button class="trash-btn" onclick="moveToGraveyard(event, '${item.id}')">✕</button>
-                        <span class="card-badge">GENERAL IDEA</span>
-                        <div class="card-img-container">
-                            <div style="font-size: 12px; text-transform: uppercase; text-align: center; padding: 12px; font-weight: 600;">
-                                ${item.title}<br>
-                                <span style="font-size: 10px; color: var(--mid-gray); font-weight: 400; text-transform: none; margin-top: 6px; display:block;">Click for AI options (${item.savedOptions ? item.savedOptions.length : 0} saved)</span>
-                            </div>
+                        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('${item.image}')"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"></div>
+                        
+                        <div class="relative z-10 flex justify-between items-start">
+                            <span class="px-2 py-0.5 text-[9px] bg-white text-zinc-900 font-bold uppercase tracking-wider border border-zinc-200">${item.type || 'item'}</span>
+                            <button onclick="moveToGraveyard('${item.id}', event)" class="p-1 bg-white/90 hover:bg-white text-zinc-700 hover:text-zinc-900 transition" title="Move to Graveyard">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
                         </div>
-                        <div class="card-details">
-                            <div class="card-title">${item.title}</div>
-                            <div class="card-price" style="font-size:10px; color: var(--mid-gray);">EXPLORE OPTIONS →</div>
+
+                        <div class="relative z-10">
+                            <h4 class="text-xs font-bold text-white truncate uppercase tracking-wide">${item.title}</h4>
+                            <div class="flex items-center justify-between mt-1">
+                                <span class="text-xs font-extrabold text-white">$${item.price}</span>
+                                <span class="text-[9px] text-zinc-300 font-medium uppercase">${item.color || ''}</span>
+                            </div>
                         </div>
                     `;
                 }
+
                 grid.appendChild(card);
             });
+
+            lucide.createIcons();
         }
 
-        // Render Graveyard Tab
-        function renderGraveyard() {
-            const grid = document.getElementById('grid-graveyard');
-            grid.innerHTML = '';
+        function applyFilters() {
+            renderWishlist();
+        }
 
-            if (graveyardData.length === 0) {
-                grid.innerHTML = `<div style="grid-column: 1/-1; color: var(--mid-gray); font-size: 13px;">Graveyard is empty.</div>`;
-                return;
+        // Add Item Modal Logic
+        function openAddItemModal() {
+            document.getElementById('add-item-modal').classList.remove('hidden');
+        }
+
+        function closeAddItemModal() {
+            document.getElementById('add-item-modal').classList.add('hidden');
+            document.getElementById('input-item-url').value = '';
+            document.getElementById('input-general-query').value = '';
+        }
+
+        function setAddMode(mode) {
+            currentAddMode = mode;
+            if (mode === 'link') {
+                document.getElementById('add-mode-link').className = 'py-2 text-xs font-semibold bg-white text-zinc-900 border border-zinc-300 shadow-sm transition';
+                document.getElementById('add-mode-general').className = 'py-2 text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition';
+                document.getElementById('form-specific-link').classList.remove('hidden');
+                document.getElementById('form-general-item').classList.add('hidden');
+            } else {
+                document.getElementById('add-mode-general').className = 'py-2 text-xs font-semibold bg-white text-zinc-900 border border-zinc-300 shadow-sm transition';
+                document.getElementById('add-mode-link').className = 'py-2 text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition';
+                document.getElementById('form-general-item').classList.remove('hidden');
+                document.getElementById('form-specific-link').classList.add('hidden');
+            }
+        }
+
+        function saveNewItem() {
+            if (currentAddMode === 'link') {
+                const url = document.getElementById('input-item-url').value.trim();
+                if (!url) return alert('Please enter a product URL.');
+
+                wishlistItems.push({
+                    id: Date.now().toString(),
+                    title: 'Extracted Product Item',
+                    price: 185,
+                    type: 'tops',
+                    color: 'black',
+                    image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80',
+                    isGeneral: false,
+                    graveyard: false,
+                    createdAt: Date.now(),
+                    url: url
+                });
+            } else {
+                const query = document.getElementById('input-general-query').value.trim();
+                if (!query) return alert('Please enter a general item description.');
+
+                wishlistItems.push({
+                    id: Date.now().toString(),
+                    title: query,
+                    price: 0,
+                    type: 'bottoms',
+                    isGeneral: true,
+                    createdAt: Date.now(),
+                    options: [
+                        { id: Date.now() + '1', title: `${query} Option A`, price: 45, brand: 'H&M', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=600&q=80' },
+                        { id: Date.now() + '2', title: `${query} Option B`, price: 89, brand: 'Zara', image: 'https://images.unsplash.com/photo-1584370848010-d7fe6bc767ec?auto=format&fit=crop&w=600&q=80' },
+                        { id: Date.now() + '3', title: `${query} Option C`, price: 160, brand: 'SSENSE', image: 'https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=600&q=80' }
+                    ],
+                    savedOptions: [],
+                    graveyard: false
+                });
             }
 
-            graveyardData.forEach(item => {
+            saveToStorage();
+            closeAddItemModal();
+            renderWishlist();
+            renderModelerWardrobe();
+        }
+
+        // AI Search & Saved Options Drawer Controller
+        function openAISearchDrawer(itemId) {
+            activeGeneralItemId = itemId;
+            const item = wishlistItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            document.getElementById('ai-search-title').innerText = item.title;
+            switchAIOptionTab('search');
+            renderAIOptions();
+            document.getElementById('ai-search-modal').classList.remove('hidden');
+        }
+
+        function closeAISearchModal() {
+            document.getElementById('ai-search-modal').classList.add('hidden');
+        }
+
+        function switchAIOptionTab(tab) {
+            activeAIDrawerSubTab = tab;
+            const btnSearch = document.getElementById('ai-tab-search');
+            const btnSaved = document.getElementById('ai-tab-saved');
+
+            if (tab === 'search') {
+                btnSearch.className = 'px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 border-zinc-900 text-zinc-900 flex items-center space-x-2';
+                btnSaved.className = 'px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 border-transparent text-zinc-500 hover:text-zinc-900 flex items-center space-x-2';
+                document.getElementById('ai-view-search').classList.remove('hidden');
+                document.getElementById('ai-view-saved').classList.add('hidden');
+            } else {
+                btnSaved.className = 'px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 border-zinc-900 text-zinc-900 flex items-center space-x-2';
+                btnSearch.className = 'px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 border-transparent text-zinc-500 hover:text-zinc-900 flex items-center space-x-2';
+                document.getElementById('ai-view-saved').classList.remove('hidden');
+                document.getElementById('ai-view-search').classList.add('hidden');
+            }
+            renderAIOptions();
+        }
+
+        function renderAIOptions() {
+            const item = wishlistItems.find(i => i.id === activeGeneralItemId);
+            if (!item) return;
+
+            const savedCount = item.savedOptions ? item.savedOptions.length : 0;
+            document.getElementById('badge-ai-saved').innerText = savedCount;
+
+            const searchGrid = document.getElementById('ai-options-grid');
+            searchGrid.innerHTML = '';
+            (item.options || []).forEach(opt => {
                 const card = document.createElement('div');
-                card.className = 'card';
+                card.className = 'bg-white border border-zinc-300 p-2 flex flex-col justify-between hover:border-zinc-900 transition';
                 card.innerHTML = `
-                    <div class="card-img-container">
-                        ${item.image ? `<img src="${item.image}" class="card-img">` : `<div style="font-size:11px;">${item.title}</div>`}
+                    <div>
+                        <div class="w-full aspect-square bg-cover bg-center mb-2" style="background-image: url('${opt.image}')"></div>
+                        <div class="flex items-center justify-between text-[10px] text-zinc-500 font-semibold uppercase">
+                            <span>${opt.brand}</span>
+                            <span class="text-zinc-900 font-bold">$${opt.price}</span>
+                        </div>
+                        <h5 class="text-xs font-bold text-zinc-900 mt-1 line-clamp-1 uppercase tracking-wide">${opt.title}</h5>
                     </div>
-                    <div class="card-details">
-                        <div class="card-title">${item.title}</div>
-                        <button class="btn-primary" style="padding: 4px; font-size: 9px; margin-top: 4px;" onclick="restoreFromGraveyard('${item.id}')">RESTORE</button>
+
+                    <div class="mt-3 pt-2 border-t border-zinc-200">
+                        <button onclick="saveOptionToGeneralItem('${opt.id}')" class="w-full py-1.5 bg-zinc-100 hover:bg-zinc-900 hover:text-white border border-zinc-300 text-zinc-900 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center space-x-1 transition">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>Save Item</span>
+                        </button>
                     </div>
                 `;
-                grid.appendChild(card);
+                searchGrid.appendChild(card);
             });
+
+            const savedGrid = document.getElementById('ai-saved-grid');
+            savedGrid.innerHTML = '';
+
+            if (!item.savedOptions || item.savedOptions.length === 0) {
+                savedGrid.innerHTML = `<p class="col-span-full text-xs text-zinc-400 text-center py-12">No saved items yet for this idea. Click '+' on suggestions to save.</p>`;
+            } else {
+                item.savedOptions.forEach(opt => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white border border-zinc-300 p-2 flex flex-col justify-between hover:border-zinc-900 transition';
+                    card.innerHTML = `
+                        <div>
+                            <div class="w-full aspect-square bg-cover bg-center mb-2" style="background-image: url('${opt.image}')"></div>
+                            <div class="flex items-center justify-between text-[10px] text-zinc-500 font-semibold uppercase">
+                                <span>${opt.brand}</span>
+                                <span class="text-zinc-900 font-bold">$${opt.price}</span>
+                            </div>
+                            <h5 class="text-xs font-bold text-zinc-900 mt-1 line-clamp-1 uppercase tracking-wide">${opt.title}</h5>
+                        </div>
+
+                        <div class="mt-3 pt-2 border-t border-zinc-200 space-y-1">
+                            <button onclick="transferToMainWishlist('${opt.id}')" class="w-full py-1.5 bg-zinc-900 text-white hover:bg-zinc-800 text-[10px] font-bold uppercase tracking-wider transition">
+                                Add to Main Wishlist
+                            </button>
+                        </div>
+                    `;
+                    savedGrid.appendChild(card);
+                });
+            }
+
+            lucide.createIcons();
         }
 
-        // Drawers Management
-        function openAddDrawer() {
-            document.getElementById('drawer-overlay').classList.add('open');
-            document.getElementById('add-drawer').classList.add('open');
-        }
+        function saveOptionToGeneralItem(optId) {
+            const item = wishlistItems.find(i => i.id === activeGeneralItemId);
+            if (!item) return;
 
-        function closeAllDrawers() {
-            document.getElementById('drawer-overlay').classList.remove('open');
-            document.getElementById('add-drawer').classList.remove('open');
-            document.getElementById('ai-drawer').classList.remove('open');
-        }
+            const targetOpt = item.options.find(o => o.id === optId);
+            if (!targetOpt) return;
 
-        // Add Items
-        function addSpecificItem() {
-            const link = document.getElementById('add-link-input').value.trim();
-            if (!link) return;
-
-            const newItem = {
-                id: Date.now().toString(),
-                type: 'specific',
-                title: 'Imported Item ' + Math.floor(Math.random()*100),
-                price: Math.floor(Math.random() * 150) + 25,
-                category: 'Tops',
-                color: 'Black',
-                image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400&auto=format&fit=crop&q=60',
-                dateAdded: Date.now()
-            };
-
-            wishlistData.push(newItem);
-            document.getElementById('add-link-input').value = '';
-            closeAllDrawers();
-            renderWishlist();
-        }
-
-        function addGeneralItem() {
-            const prompt = document.getElementById('add-general-input').value.trim();
-            if (!prompt) return;
-
-            const newItem = {
-                id: Date.now().toString(),
-                type: 'general',
-                title: prompt,
-                category: 'Bottoms',
-                color: 'Pink',
-                dateAdded: Date.now(),
-                savedOptions: []
-            };
-
-            wishlistData.push(newItem);
-            document.getElementById('add-general-input').value = '';
-            closeAllDrawers();
-            renderWishlist();
-        }
-
-        // Graveyard Actions
-        function moveToGraveyard(event, itemId) {
-            event.stopPropagation();
-            const idx = wishlistData.findIndex(i => i.id === itemId);
-            if (idx !== -1) {
-                graveyardData.push(wishlistData[idx]);
-                wishlistData.splice(idx, 1);
+            if (!item.savedOptions) item.savedOptions = [];
+            if (!item.savedOptions.some(o => o.id === optId)) {
+                item.savedOptions.push(targetOpt);
+                saveToStorage();
+                renderAIOptions();
                 renderWishlist();
             }
         }
 
-        function restoreFromGraveyard(itemId) {
-            const idx = graveyardData.findIndex(i => i.id === itemId);
-            if (idx !== -1) {
-                wishlistData.push(graveyardData[idx]);
-                graveyardData.splice(idx, 1);
-                renderGraveyard();
-            }
-        }
+        function transferToMainWishlist(optId) {
+            const generalItem = wishlistItems.find(i => i.id === activeGeneralItemId);
+            if (!generalItem || !generalItem.savedOptions) return;
 
-        // General Item AI Options Drawer
-        function openAiDrawer(itemId) {
-            activeGeneralItemId = itemId;
-            const item = wishlistData.find(i => i.id === itemId);
-            if (!item) return;
+            const optIdx = generalItem.savedOptions.findIndex(o => o.id === optId);
+            if (optIdx === -1) return;
 
-            document.getElementById('ai-drawer-title').innerText = item.title;
-            document.getElementById('drawer-overlay').classList.add('open');
-            document.getElementById('ai-drawer').classList.add('open');
+            const opt = generalItem.savedOptions[optIdx];
 
-            switchDrawerTab('search');
-            renderAiDiscover();
-            updateSavedCount();
-        }
-
-        function switchDrawerTab(tab) {
-            document.getElementById('tab-ai-search').classList.toggle('active', tab === 'search');
-            document.getElementById('tab-ai-saved').classList.toggle('active', tab === 'saved');
-
-            document.getElementById('drawer-view-search').classList.toggle('hidden', tab !== 'search');
-            document.getElementById('drawer-view-saved').classList.toggle('hidden', tab !== 'saved');
-
-            if (tab === 'saved') renderAiSaved();
-        }
-
-        function renderAiDiscover() {
-            const grid = document.getElementById('ai-discover-grid');
-            grid.innerHTML = '';
-
-            const priceFilter = document.getElementById('ai-filter-price').value;
-
-            let options = mockAiDatabase.filter(item => {
-                if (priceFilter === 'UNDER_50' && item.price >= 50) return false;
-                if (priceFilter === '50_150' && (item.price < 50 || item.price > 150)) return false;
-                if (priceFilter === 'OVER_150' && item.price <= 150) return false;
-                return true;
-            });
-
-            options.forEach(opt => {
-                const card = document.createElement('div');
-                card.className = 'ai-item-card';
-                card.innerHTML = `
-                    <img src="${opt.image}" class="ai-item-img">
-                    <div class="ai-item-title">${opt.title}</div>
-                    <div class="ai-item-brand">${opt.brand}</div>
-                    <div class="ai-item-price">$${opt.price}</div>
-                    <button class="ai-action-btn" onclick="saveAiOptionToGeneral('${opt.id}')">+ SAVE OPTION</button>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        function saveAiOptionToGeneral(optId) {
-            const genItem = wishlistData.find(i => i.id === activeGeneralItemId);
-            const opt = mockAiDatabase.find(o => o.id === optId);
-
-            if (genItem && opt) {
-                if (!genItem.savedOptions) genItem.savedOptions = [];
-                if (!genItem.savedOptions.some(o => o.id === opt.id)) {
-                    genItem.savedOptions.push({...opt});
-                    updateSavedCount();
-                }
-            }
-        }
-
-        function updateSavedCount() {
-            const genItem = wishlistData.find(i => i.id === activeGeneralItemId);
-            const count = genItem && genItem.savedOptions ? genItem.savedOptions.length : 0;
-            document.getElementById('saved-count').innerText = count;
-        }
-
-        function renderAiSaved() {
-            const grid = document.getElementById('ai-saved-grid');
-            grid.innerHTML = '';
-
-            const genItem = wishlistData.find(i => i.id === activeGeneralItemId);
-            if (!genItem || !genItem.savedOptions || genItem.savedOptions.length === 0) {
-                grid.innerHTML = `<div style="grid-column: 1/-1; font-size:12px; color: var(--mid-gray);">No saved options yet. Click "+" in Discover tab to save options.</div>`;
-                return;
-            }
-
-            genItem.savedOptions.forEach((opt, idx) => {
-                const card = document.createElement('div');
-                card.className = 'ai-item-card';
-                card.innerHTML = `
-                    <img src="${opt.image}" class="ai-item-img">
-                    <div class="ai-item-title">${opt.title}</div>
-                    <div class="ai-item-price">$${opt.price}</div>
-                    <button class="ai-action-btn" onclick="transferSavedToMainWishlist(${idx})">ADD TO MAIN WISHLIST</button>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        function transferSavedToMainWishlist(savedIndex) {
-            const genItem = wishlistData.find(i => i.id === activeGeneralItemId);
-            if (!genItem || !genItem.savedOptions) return;
-
-            const savedOpt = genItem.savedOptions[savedIndex];
-
-            // Add as specific item to main wishlist
-            wishlistData.push({
+            wishlistItems.push({
                 id: Date.now().toString(),
-                type: 'specific',
-                title: savedOpt.title,
-                price: savedOpt.price,
-                category: savedOpt.category || 'Bottoms',
-                color: savedOpt.color || 'Pink',
-                image: savedOpt.image,
-                dateAdded: Date.now()
+                title: opt.title,
+                price: opt.price,
+                type: generalItem.type || 'bottoms',
+                color: 'pink',
+                image: opt.image,
+                isGeneral: false,
+                graveyard: false,
+                createdAt: Date.now()
             });
 
-            // Remove from general item saved options
-            genItem.savedOptions.splice(savedIndex, 1);
+            generalItem.savedOptions.splice(optIdx, 1);
 
-            updateSavedCount();
-            renderAiSaved();
+            saveToStorage();
+            renderAIOptions();
             renderWishlist();
+            renderModelerWardrobe();
         }
 
-        // --- OUTFIT MODELER LOGIC ---
+        // Graveyard Operations
+        function moveToGraveyard(id, e) {
+            if (e) e.stopPropagation();
+            const item = wishlistItems.find(i => i.id === id);
+            if (item) {
+                item.graveyard = true;
+                saveToStorage();
+                renderWishlist();
+                renderGraveyard();
+                renderModelerWardrobe();
+            }
+        }
 
-        function renderModelerSidebar() {
-            const grid = document.getElementById('modeler-sidebar-grid');
+        function restoreFromGraveyard(id) {
+            const item = wishlistItems.find(i => i.id === id);
+            if (item) {
+                item.graveyard = false;
+                saveToStorage();
+                renderWishlist();
+                renderGraveyard();
+                renderModelerWardrobe();
+            }
+        }
+
+        function renderGraveyard() {
+            const graveyardItems = wishlistItems.filter(i => i.graveyard);
+            document.getElementById('badge-graveyard').innerText = graveyardItems.length;
+
+            const grid = document.getElementById('graveyard-grid');
             grid.innerHTML = '';
 
-            const categoryFilter = document.getElementById('modeler-filter-type').value;
-
-            let sourceList = [];
-
-            if (modelerSearchResults !== null) {
-                // Showing Search Results
-                document.getElementById('sidebar-mode-label').innerText = 'AI SEARCH RESULTS';
-                document.getElementById('btn-clear-search').classList.remove('hidden');
-                sourceList = modelerSearchResults;
-            } else {
-                // Default: Showing Wishlist
-                document.getElementById('sidebar-mode-label').innerText = 'WISHLIST ITEMS';
-                document.getElementById('btn-clear-search').classList.add('hidden');
-                
-                // Only specific items or saved options from wishlist
-                wishlistData.forEach(item => {
-                    if (item.type === 'specific') {
-                        sourceList.push(item);
-                    } else if (item.savedOptions) {
-                        item.savedOptions.forEach(opt => sourceList.push(opt));
-                    }
-                });
-            }
-
-            // Apply clothing category filter
-            if (categoryFilter !== 'ALL') {
-                sourceList = sourceList.filter(i => (i.category || 'Tops') === categoryFilter);
-            }
-
-            if (sourceList.length === 0) {
-                grid.innerHTML = `<div style="grid-column: 1/-1; font-size:11px; color: var(--mid-gray);">No items available.</div>`;
+            if (graveyardItems.length === 0) {
+                grid.innerHTML = `<p class="col-span-full text-xs text-zinc-400 text-center py-12">The item graveyard is currently empty.</p>`;
                 return;
             }
 
-            sourceList.forEach(item => {
+            graveyardItems.forEach(item => {
                 const card = document.createElement('div');
-                card.className = 'sidebar-item';
-                card.draggable = true;
-
-                card.ondragstart = (e) => {
-                    e.dataTransfer.setData('text/plain', JSON.stringify(item));
-                };
-
+                card.className = 'aspect-square bg-zinc-50 border border-zinc-200 p-3 flex flex-col justify-between relative overflow-hidden opacity-75 hover:opacity-100 transition';
                 card.innerHTML = `
-                    <img src="${item.image}">
-                    <div class="sidebar-item-info">
-                        <div class="sidebar-item-name">${item.title}</div>
-                        <div class="sidebar-item-price">$${item.price || 0}</div>
+                    <div class="flex justify-between items-start z-10">
+                        <span class="px-2 py-0.5 text-[9px] bg-zinc-200 text-zinc-700 font-bold uppercase">Archived</span>
+                        <button onclick="restoreFromGraveyard('${item.id}')" class="p-1 hover:bg-zinc-200 text-zinc-800 transition" title="Restore">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <div class="z-10">
+                        <h4 class="text-xs font-bold text-zinc-900 uppercase truncate">${item.title}</h4>
+                        <span class="text-xs font-semibold text-zinc-500">$${item.price || 0}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function clearGraveyard() {
+            wishlistItems = wishlistItems.filter(i => !i.graveyard);
+            saveToStorage();
+            renderGraveyard();
+            renderModelerWardrobe();
+        }
+
+        // Outfit Modeler Controller with Auto-Restore Search
+        function handleModelerSearch(e) {
+            const query = e.target.value;
+            const clearBtn = document.getElementById('clear-search-btn');
+
+            if (query.trim().length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            // Auto restores items instantly on empty input/backspace
+            renderModelerWardrobe(currentModelerFilter, query.trim());
+        }
+
+        function clearModelerSearch() {
+            const input = document.getElementById('modeler-search-input');
+            input.value = '';
+            document.getElementById('clear-search-btn').classList.add('hidden');
+            renderModelerWardrobe(currentModelerFilter, '');
+        }
+
+        function filterModelerWardrobe(type) {
+            currentModelerFilter = type;
+            document.querySelectorAll('.modeler-tab-btn').forEach(btn => {
+                btn.className = 'modeler-tab-btn px-3 py-1 text-xs border border-zinc-300 bg-white text-zinc-700 hover:text-zinc-900';
+            });
+            event.target.className = 'modeler-tab-btn active px-3 py-1 text-xs border border-zinc-900 bg-zinc-900 text-white font-medium';
+            const query = document.getElementById('modeler-search-input').value.trim();
+            renderModelerWardrobe(type, query);
+        }
+
+        function renderModelerWardrobe(typeFilter = 'all', searchQuery = '') {
+            const grid = document.getElementById('modeler-wardrobe-grid');
+            grid.innerHTML = '';
+
+            let available = wishlistItems.filter(i => !i.graveyard && !i.isGeneral);
+
+            if (typeFilter !== 'all') {
+                available = available.filter(i => i.type === typeFilter);
+            }
+
+            if (searchQuery) {
+                const q = searchQuery.toLowerCase();
+                available = available.filter(i => i.title.toLowerCase().includes(q) || (i.color && i.color.toLowerCase().includes(q)));
+            }
+
+            if (available.length === 0) {
+                grid.innerHTML = `<p class="col-span-2 text-xs text-zinc-400 text-center py-8">No matching wishlist items found.</p>`;
+                return;
+            }
+
+            available.forEach(item => {
+                const card = document.createElement('div');
+                card.draggable = true;
+                card.ondragstart = (e) => handleDragStart(e, item);
+                card.onclick = () => equipItemToModeler(item);
+                
+                card.className = 'aspect-square bg-white border border-zinc-300 hover:border-zinc-900 p-2 cursor-grab active:cursor-grabbing transition flex flex-col justify-between group';
+                card.innerHTML = `
+                    <div class="w-full h-20 bg-cover bg-center" style="background-image: url('${item.image}')"></div>
+                    <div>
+                        <h5 class="text-[11px] font-bold text-zinc-900 truncate uppercase tracking-wider">${item.title}</h5>
+                        <span class="text-[10px] font-extrabold text-zinc-900">$${item.price}</span>
                     </div>
                 `;
                 grid.appendChild(card);
             });
         }
 
-        function executeModelerSearch() {
-            const query = document.getElementById('modeler-search-input').value.trim().toLowerCase();
-            if (!query) return;
+        function handleDragStart(e, item) {
+            e.dataTransfer.setData('text/plain', JSON.stringify(item));
+        }
 
-            // Search mock database
-            modelerSearchResults = mockAiDatabase.filter(item => 
-                item.title.toLowerCase().includes(query) || 
-                item.category.toLowerCase().includes(query) ||
-                item.color.toLowerCase().includes(query)
-            );
+        function allowDrop(e) {
+            e.preventDefault();
+        }
 
-            // If no match found, show generic generated suggestions
-            if (modelerSearchResults.length === 0) {
-                modelerSearchResults = [
-                    { id: 'sr-1', title: query + ' Style Option A', price: 65, category: 'Tops', image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400&auto=format&fit=crop&q=60' },
-                    { id: 'sr-2', title: query + ' Style Option B', price: 110, category: 'Bottoms', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&auto=format&fit=crop&q=60' }
-                ];
+        function handleDrop(e, slotKey) {
+            e.preventDefault();
+            const data = e.dataTransfer.getData('text/plain');
+            if (data) {
+                const item = JSON.parse(data);
+                equippedItems[slotKey] = item;
+                updateModelerVisuals();
+            }
+        }
+
+        function equipItemToModeler(item) {
+            let slotKey = item.type;
+            if (slotKey === 'jackets') slotKey = 'tops';
+            equippedItems[slotKey] = item;
+            updateModelerVisuals();
+        }
+
+        function unequipSlot(slotKey) {
+            equippedItems[slotKey] = null;
+            updateModelerVisuals();
+        }
+
+        function updateModelerVisuals() {
+            let totalCost = 0;
+
+            Object.keys(equippedItems).forEach(slotKey => {
+                const slotEl = document.getElementById(`slot-${slotKey}`);
+                const placeholder = slotEl.querySelectorAll('.slot-placeholder');
+                const content = slotEl.querySelector('.slot-content');
+
+                const item = equippedItems[slotKey];
+                if (item) {
+                    totalCost += item.price;
+                    placeholder.forEach(p => p.classList.add('hidden'));
+                    content.classList.remove('hidden');
+                    content.innerHTML = `
+                        <div class="w-full h-full bg-cover bg-center relative group" style="background-image: url('${item.image}')">
+                            <div class="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-[10px] text-white font-bold uppercase tracking-wider">
+                                Unequip
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    placeholder.forEach(p => p.classList.remove('hidden'));
+                    content.classList.add('hidden');
+                }
+            });
+
+            document.getElementById('modeler-total-cost').innerText = `$${totalCost}`;
+        }
+
+        function clearModelerCanvas() {
+            equippedItems = { accessories: null, tops: null, bottoms: null, shoes: null };
+            updateModelerVisuals();
+        }
+
+        // ----------------------------------------------------
+        // 3D ROTATABLE MANNEQUIN ENGINE (Three.js)
+        // ----------------------------------------------------
+        let scene, camera, renderer, mannequinGroup;
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+
+        function init3DMannequin() {
+            const container = document.getElementById('mannequin-canvas-container');
+            if (!container) return;
+
+            // Scene setup
+            scene = new THREE.Scene();
+
+            // Camera setup
+            const aspect = container.clientWidth / container.clientHeight;
+            camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
+            camera.position.set(0, 0, 7.5);
+
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+            scene.add(ambientLight);
+
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight1.position.set(5, 10, 7.5);
+            scene.add(directionalLight1);
+
+            const directionalLight2 = new THREE.DirectionalLight(0xa1a1aa, 0.4);
+            directionalLight2.position.set(-5, 5, -5);
+            scene.add(directionalLight2);
+
+            // Create Stylized High-Fashion Minimalist Geometric Mannequin Group
+            mannequinGroup = new THREE.Group();
+
+            const mannequinMaterial = new THREE.MeshStandardMaterial({
+                color: 0x18181b,
+                roughness: 0.35,
+                metalness: 0.1
+            });
+
+            const accentMaterial = new THREE.MeshStandardMaterial({
+                color: 0xd4d4d8,
+                roughness: 0.5,
+                metalness: 0.2
+            });
+
+            // Head & Neck
+            const headGeo = new THREE.SphereGeometry(0.35, 32, 16);
+            headGeo.scale(1, 1.25, 1);
+            const head = new THREE.Mesh(headGeo, mannequinMaterial);
+            head.position.y = 2.1;
+            mannequinGroup.add(head);
+
+            const neckGeo = new THREE.CylinderGeometry(0.14, 0.16, 0.3, 16);
+            const neck = new THREE.Mesh(neckGeo, mannequinMaterial);
+            neck.position.y = 1.65;
+            mannequinGroup.add(neck);
+
+            // Shoulders & Chest / Torso Bust
+            const chestGeo = new THREE.CylinderGeometry(0.55, 0.42, 1.1, 24);
+            chestGeo.scale(1.2, 1, 0.7);
+            const chest = new THREE.Mesh(chestGeo, mannequinMaterial);
+            chest.position.y = 1.0;
+            mannequinGroup.add(chest);
+
+            // Waist & Hips
+            const waistGeo = new THREE.CylinderGeometry(0.42, 0.48, 0.8, 24);
+            waistGeo.scale(1.1, 1, 0.75);
+            const waist = new THREE.Mesh(waistGeo, mannequinMaterial);
+            waist.position.y = 0.1;
+            mannequinGroup.add(waist);
+
+            // Upper Legs
+            const legGeo = new THREE.CylinderGeometry(0.18, 0.13, 1.2, 16);
+            const leftLeg = new THREE.Mesh(legGeo, mannequinMaterial);
+            leftLeg.position.set(-0.25, -0.85, 0);
+            mannequinGroup.add(leftLeg);
+
+            const rightLeg = new THREE.Mesh(legGeo, mannequinMaterial);
+            rightLeg.position.set(0.25, -0.85, 0);
+            mannequinGroup.add(rightLeg);
+
+            // Lower Legs
+            const lowerLegGeo = new THREE.CylinderGeometry(0.13, 0.09, 1.1, 16);
+            const leftLowerLeg = new THREE.Mesh(lowerLegGeo, mannequinMaterial);
+            leftLowerLeg.position.set(-0.25, -1.95, 0);
+            mannequinGroup.add(leftLowerLeg);
+
+            const rightLowerLeg = new THREE.Mesh(lowerLegGeo, mannequinMaterial);
+            rightLowerLeg.position.set(0.25, -1.95, 0);
+            mannequinGroup.add(rightLowerLeg);
+
+            // Pedestal Stand
+            const poleGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.5, 12);
+            const pole = new THREE.Mesh(poleGeo, accentMaterial);
+            pole.position.set(0, -2.2, -0.15);
+            mannequinGroup.add(pole);
+
+            const baseGeo = new THREE.CylinderGeometry(0.8, 0.8, 0.06, 32);
+            const base = new THREE.Mesh(baseGeo, accentMaterial);
+            base.position.set(0, -2.9, -0.15);
+            mannequinGroup.add(base);
+
+            // Center group position
+            mannequinGroup.position.y = 0.2;
+            scene.add(mannequinGroup);
+
+            // Orbit Drag Mouse & Touch Controls
+            container.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            window.addEventListener('mouseup', () => isDragging = false);
+
+            container.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+
+                const deltaX = e.clientX - previousMousePosition.x;
+                mannequinGroup.rotation.y += deltaX * 0.012;
+
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            // Touch support for mobile dragging
+            container.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    isDragging = true;
+                    previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+            });
+
+            window.addEventListener('touchend', () => isDragging = false);
+
+            container.addEventListener('touchmove', (e) => {
+                if (!isDragging || e.touches.length !== 1) return;
+
+                const deltaX = e.touches[0].clientX - previousMousePosition.x;
+                mannequinGroup.rotation.y += deltaX * 0.012;
+
+                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            });
+
+            window.addEventListener('resize', onWindowResize3D);
+
+            animate3D();
+        }
+
+        function onWindowResize3D() {
+            const container = document.getElementById('mannequin-canvas-container');
+            if (!container || !renderer || !camera) return;
+
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+
+            // Gentle continuous rotation when not being actively dragged
+            if (!isDragging && mannequinGroup) {
+                mannequinGroup.rotation.y += 0.003;
             }
 
-            renderModelerSidebar();
-        }
-
-        function clearModelerSearch() {
-            modelerSearchResults = null;
-            document.getElementById('modeler-search-input').value = '';
-            renderModelerSidebar();
-        }
-
-        // Drag and Drop onto Mannequin
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.currentTarget.classList.add('drag-over');
-        }
-
-        function handleDragLeave(e) {
-            e.currentTarget.classList.remove('drag-over');
-        }
-
-        function handleDrop(e, slotName) {
-            e.preventDefault();
-            e.currentTarget.classList.remove('drag-over');
-
-            const itemDataStr = e.dataTransfer.getData('text/plain');
-            if (!itemDataStr) return;
-
-            const item = JSON.parse(itemDataStr);
-            outfitSlots[slotName] = item;
-
-            renderSlots();
-        }
-
-        function renderSlots() {
-            let total = 0;
-
-            Object.keys(outfitSlots).forEach(slotName => {
-                const container = document.getElementById(`slot-content-${slotName}`);
-                const item = outfitSlots[slotName];
-
-                if (!item) {
-                    container.innerHTML = '';
-                    return;
-                }
-
-                total += (item.price || 0);
-
-                // Check if this item is already in main wishlist
-                const inWishlist = wishlistData.some(w => w.id === item.id || w.title === item.title);
-
-                const slotCard = document.createElement('div');
-                slotCard.className = 'slot-card';
-                slotCard.innerHTML = `
-                    <button class="slot-card-remove" onclick="removeSlotItem('${slotName}')">✕</button>
-                    <img src="${item.image}">
-                    ${!inWishlist ? `<button class="slot-card-add-wl" onclick="addSlotItemToWishlist('${slotName}')">+ WISHLIST</button>` : ''}
-                `;
-
-                container.innerHTML = '';
-                container.appendChild(slotCard);
-            });
-
-            document.getElementById('outfit-total').innerText = `OUTFIT TOTAL: $${total}`;
-        }
-
-        function removeSlotItem(slotName) {
-            outfitSlots[slotName] = null;
-            renderSlots();
-        }
-
-        function addSlotItemToWishlist(slotName) {
-            const item = outfitSlots[slotName];
-            if (!item) return;
-
-            wishlistData.push({
-                id: Date.now().toString(),
-                type: 'specific',
-                title: item.title,
-                price: item.price || 0,
-                category: item.category || slotName,
-                color: item.color || 'Black',
-                image: item.image,
-                dateAdded: Date.now()
-            });
-
-            renderSlots();
-            renderWishlist();
+            renderer.render(scene, camera);
         }
     </script>
 </body>
-</html>
 </html>
