@@ -17,11 +17,10 @@ const app = express();
 // CHANGE "YOURNAME" to your GitHub username. No trailing slash.
 app.use(cors({
   origin: [
-    "https://YOURNAME.github.io",
-    "http://localhost:5500",   // VS Code Live Server
-    "http://127.0.0.1:5500",
+  "https://sahana-sarangi.github.io",        // ← your real one, no trailing slash, no repo name
+    /^http:\/\/(localhost|127\.0\.0\.1):\d+$/, // local testing
   ],
-}));
+}));  
 
 const anthropic = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
 
