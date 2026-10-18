@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-white text-zinc-900">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +12,7 @@
             --subtle-gray: #f2f2f2;
             --mid-gray: #767676;
             --dark-gray: #333333;
+            --error: #b00020;
         }
 
         * {
@@ -28,6 +29,11 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+        }
+
+        button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible, .card:focus-visible {
+            outline: 2px solid #000;
+            outline-offset: 2px;
         }
 
         /* Top Navigation */
@@ -82,9 +88,10 @@
             display: flex;
             gap: 12px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
-        select, input[type="text"], input[type="number"] {
+        select, input[type="text"], input[type="search"], input[type="number"] {
             border: 1px solid var(--border-color);
             padding: 8px 12px;
             font-size: 13px;
@@ -92,15 +99,19 @@
             outline: none;
         }
 
-        select:focus, input:focus {
-            border-color: #000;
-        }
+        #filter-search { min-width: 220px; }
 
         /* Main Layout */
         main {
             flex: 1;
             padding: 32px;
             position: relative;
+        }
+
+        .view-note {
+            font-size: 12px;
+            color: var(--mid-gray);
+            margin-bottom: 16px;
         }
 
         /* Grid Display */
@@ -110,6 +121,12 @@
             gap: 20px;
         }
 
+        .empty-msg {
+            grid-column: 1 / -1;
+            color: var(--mid-gray);
+            font-size: 13px;
+        }
+
         /* Card Styles */
         .card {
             border: 1px solid var(--border-color);
@@ -117,7 +134,7 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            aspect-ratio: 1 / 1.25;
+            aspect-ratio: 1 / 1.3;
             cursor: pointer;
             user-select: none;
         }
@@ -132,13 +149,11 @@
             background: #fafafa;
         }
 
-        .card-add-trigger:hover {
-            background: #f0f0f0;
-        }
+        .card-add-trigger:hover { background: #f0f0f0; }
 
         .card-img-container {
             width: 100%;
-            height: 72%;
+            height: 70%;
             background: var(--subtle-gray);
             display: flex;
             align-items: center;
@@ -153,6 +168,25 @@
             object-fit: cover;
         }
 
+        .card-img-fade { transition: opacity 0.4s ease; }
+
+        .card-placeholder {
+            font-size: 12px;
+            text-transform: uppercase;
+            text-align: center;
+            padding: 12px;
+            font-weight: 600;
+        }
+
+        .card-placeholder small {
+            display: block;
+            margin-top: 6px;
+            font-size: 10px;
+            color: var(--mid-gray);
+            font-weight: 400;
+            text-transform: none;
+        }
+
         .card-details {
             padding: 10px;
             display: flex;
@@ -161,6 +195,7 @@
             flex: 1;
             background: #fff;
             border-top: 1px solid var(--subtle-gray);
+            min-width: 0;
         }
 
         .card-title {
@@ -178,6 +213,15 @@
             margin-top: 4px;
         }
 
+        .card-tags {
+            font-size: 10px;
+            color: var(--mid-gray);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .card-badge {
             position: absolute;
             top: 8px;
@@ -188,6 +232,7 @@
             padding: 3px 6px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            z-index: 2;
         }
 
         .trash-btn {
@@ -203,35 +248,28 @@
             justify-content: center;
             cursor: pointer;
             font-size: 12px;
-            z-index: 2;
+            z-index: 3;
         }
 
-        .trash-btn:hover {
-            background: #000;
-            color: #fff;
-        }
+        .trash-btn:hover { background: #000; color: #fff; }
 
         /* Side Drawers */
         .drawer-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             background: rgba(0,0,0,0.2);
             z-index: 100;
             display: none;
         }
 
-        .drawer-overlay.open {
-            display: block;
-        }
+        .drawer-overlay.open { display: block; }
 
         .drawer {
             position: fixed;
             top: 0;
             right: -480px;
             width: 440px;
+            max-width: 100vw;
             height: 100%;
             background: #fff;
             border-left: 1px solid var(--border-color);
@@ -243,9 +281,7 @@
             overflow-y: auto;
         }
 
-        .drawer.open {
-            right: 0;
-        }
+        .drawer.open { right: 0; }
 
         .drawer-header {
             display: flex;
@@ -263,9 +299,7 @@
             cursor: pointer;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+        .form-group { margin-bottom: 20px; }
 
         .form-group label {
             display: block;
@@ -295,9 +329,30 @@
             letter-spacing: 0.05em;
         }
 
-        .btn-primary:hover {
-            background: #333;
+        .btn-primary:hover { background: #333; }
+        .btn-primary:disabled { background: #777; border-color: #777; cursor: wait; }
+
+        .btn-secondary {
+            background: #fff;
+            color: #000;
+            border: 1px solid #000;
+            padding: 6px 10px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
         }
+
+        .btn-secondary:hover { background: #f0f0f0; }
+
+        .status-msg {
+            font-size: 12px;
+            color: var(--mid-gray);
+            margin-top: 8px;
+            min-height: 1em;
+        }
+
+        .status-msg.error { color: var(--error); }
 
         /* Drawer Inner Tabs */
         .drawer-tabs {
@@ -323,6 +378,14 @@
             color: #000;
             border-bottom: 2px solid #000 !important;
         }
+
+        .discover-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .discover-toolbar select { flex: 1; }
 
         /* AI Options Cards in Drawer */
         .ai-grid {
@@ -351,6 +414,10 @@
         .ai-item-title {
             font-size: 11px;
             font-weight: 600;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .ai-item-brand {
@@ -364,24 +431,43 @@
             margin-top: 4px;
         }
 
+        .ai-item-note {
+            font-size: 10px;
+            color: var(--mid-gray);
+            margin-top: 2px;
+        }
+
+        .ai-btn-row {
+            display: flex;
+            gap: 4px;
+            margin-top: auto;
+            padding-top: 8px;
+        }
+
         .ai-action-btn {
+            flex: 1;
             background: #000;
             color: #fff;
-            border: none;
+            border: 1px solid #000;
             padding: 6px;
             font-size: 10px;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 8px;
             text-transform: uppercase;
+            text-align: center;
+            text-decoration: none;
         }
+
+        .ai-action-btn.outline { background: #fff; color: #000; }
+        .ai-action-btn:disabled { background: #ddd; border-color: #ddd; color: #555; cursor: default; }
 
         /* Outfit Modeler Layout */
         .modeler-container {
             display: grid;
             grid-template-columns: 1fr 340px;
             gap: 32px;
-            height: calc(100vh - 180px);
+            height: calc(100vh - 140px);
+            min-height: 560px;
         }
 
         .mannequin-stage {
@@ -394,18 +480,43 @@
             overflow: hidden;
         }
 
-        .silhouette-svg {
-            height: 80%;
-            max-height: 520px;
-            fill: #111;
-            opacity: 0.85;
+        /* The figure keeps the silhouette's proportions (100 x 220) so garments line up with the body */
+        .figure {
+            position: relative;
+            height: 82%;
+            max-height: 560px;
+            aspect-ratio: 100 / 220;
         }
+
+        .figure.drag-over { outline: 1px dashed #000; outline-offset: 12px; }
+
+        .silhouette-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            fill: #e4e4e4; /* light so black garments stay visible */
+        }
+
+        .worn {
+            position: absolute;
+            object-fit: contain;
+            pointer-events: none;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.18));
+        }
+
+        .worn.loading { opacity: 0.35; }
+
+        .worn-Head        { left: 22%;  top: -2%; width: 56%;  height: 18%; z-index: 5; }
+        .worn-Tops        { left: 6%;   top: 17%; width: 88%;  height: 37%; z-index: 4; }
+        .worn-Bottoms     { left: 18%;  top: 47%; width: 64%;  height: 44%; z-index: 3; }
+        .worn-Shoes       { left: 18%;  top: 86%; width: 64%;  height: 12%; z-index: 2; }
+        .worn-Accessories { left: 70%;  top: 38%; width: 50%;  height: 22%; z-index: 6; }
 
         /* Fitting Slot Dropzones */
         .slot-zone {
             position: absolute;
             border: 1px dashed var(--border-color);
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.9);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -421,11 +532,11 @@
             background: #f0f0f0;
         }
 
-        .slot-zone-head { top: 8%; left: 18%; }
-        .slot-zone-top { top: 28%; left: 18%; }
-        .slot-zone-bottom { top: 52%; left: 18%; }
-        .slot-zone-shoes { top: 76%; left: 18%; }
-        .slot-zone-accessory { top: 38%; right: 18%; }
+        .slot-zone-head { top: 4%; left: 24px; }
+        .slot-zone-top { top: 26%; left: 24px; }
+        .slot-zone-bottom { top: 48%; left: 24px; }
+        .slot-zone-shoes { top: 70%; left: 24px; }
+        .slot-zone-accessory { top: 38%; right: 24px; }
 
         .slot-label {
             font-size: 10px;
@@ -435,11 +546,22 @@
             margin-bottom: 4px;
         }
 
-        /* 3D Canvas styles */
-        #mannequin-canvas-container {
+        .slot-card {
+            width: 90px;
+            height: 90px;
+            border: 1px solid var(--border-color);
+            background: #fff;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slot-card img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
         }
 
         .slot-card-remove {
@@ -479,6 +601,7 @@
             display: flex;
             flex-direction: column;
             background: #fff;
+            min-height: 0;
         }
 
         .sidebar-header {
@@ -495,6 +618,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-title span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .sidebar-controls {
@@ -506,6 +636,11 @@
         .search-box-wrap {
             display: flex;
             gap: 4px;
+        }
+
+        .sidebar-hint {
+            font-size: 10px;
+            color: var(--mid-gray);
         }
 
         .sidebar-items-grid {
@@ -528,11 +663,22 @@
             position: relative;
         }
 
+        .sidebar-item.general { cursor: pointer; }
+
         .sidebar-item img {
             width: 100%;
             height: 70%;
             object-fit: cover;
             background: var(--subtle-gray);
+        }
+
+        .sidebar-item .card-placeholder {
+            height: 70%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--subtle-gray);
+            font-size: 10px;
         }
 
         .sidebar-item-info {
@@ -541,6 +687,7 @@
             flex-direction: column;
             justify-content: center;
             flex: 1;
+            min-width: 0;
         }
 
         .sidebar-item-name {
@@ -559,14 +706,17 @@
         /* Budget Counter */
         .total-counter {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
+            top: 16px;
+            right: 16px;
             background: #fff;
             border: 1px solid var(--border-color);
-            padding: 12px 16px;
+            padding: 10px 14px;
             font-size: 13px;
             font-weight: 700;
-            z-index: 10;
+            z-index: 11;
+            display: flex;
+            gap: 12px;
+            align-items: center;
         }
 
         .btn-clear-search {
@@ -577,61 +727,52 @@
             padding: 4px 8px;
             cursor: pointer;
             text-transform: uppercase;
+            flex-shrink: 0;
         }
 
         .hidden { display: none !important; }
+
+        @media (max-width: 900px) {
+            .modeler-container { grid-template-columns: 1fr; height: auto; }
+            .mannequin-stage { min-height: 620px; }
+            .modeler-sidebar { max-height: 520px; }
+            header { flex-direction: column; gap: 12px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .drawer, .card-img-fade { transition: none; }
+        }
     </style>
 </head>
-<body class="h-full flex flex-col overflow-hidden bg-white text-zinc-900 selection:bg-zinc-200 selection:text-zinc-900">
+<body>
 
-    <!-- TOP NAVIGATION HEADER -->
-    <header class="h-16 border-b border-zinc-200 bg-white px-6 flex items-center justify-between z-20 flex-shrink-0">
-        <div class="flex items-center space-x-6">
-            <!-- User Name Header -->
-            <div class="flex items-center space-x-2">
-                <span class="text-xs font-semibold uppercase tracking-widest text-zinc-800">hi elden</span>
-            </div>
-
-            <!-- Nav Tabs -->
-            <nav class="flex items-center space-x-0 bg-zinc-100 p-0.5 border border-zinc-200">
-                <button id="tab-wishlist" onclick="switchTab('wishlist')" class="px-4 py-2 text-xs font-medium transition-all flex items-center space-x-2 bg-white text-zinc-900 border border-zinc-300 shadow-sm">
-                    <i data-lucide="grid" class="w-3.5 h-3.5 text-zinc-800"></i>
-                    <span>Wishlist</span>
-                    <span id="badge-wishlist" class="ml-1 px-1.5 py-0.5 text-[10px] bg-zinc-200 text-zinc-800 font-semibold">0</span>
-                </button>
-                <button id="tab-modeler" onclick="switchTab('modeler')" class="px-4 py-2 text-xs font-medium transition-all flex items-center space-x-2 text-zinc-500 hover:text-zinc-900">
-                    <i data-lucide="user" class="w-3.5 h-3.5"></i>
-                    <span>Outfit Modeler</span>
-                </button>
-                <button id="tab-graveyard" onclick="switchTab('graveyard')" class="px-4 py-2 text-xs font-medium transition-all flex items-center space-x-2 text-zinc-500 hover:text-zinc-900">
-                    <i data-lucide="skull" class="w-3.5 h-3.5"></i>
-                    <span>Graveyard</span>
-                    <span id="badge-graveyard" class="ml-1 px-1.5 py-0.5 text-[10px] bg-zinc-200 text-zinc-600">0</span>
-                </button>
-            </nav>
-        </div>
+    <!-- Header -->
+    <header>
+        <div class="user-title">hi elden</div>
+        <nav class="nav-tabs">
+            <button class="nav-btn active" id="tab-wishlist" onclick="switchView('wishlist')">WISHLIST</button>
+            <button class="nav-btn" id="tab-modeler" onclick="switchView('modeler')">OUTFIT MODELER</button>
+            <button class="nav-btn" id="tab-graveyard" onclick="switchView('graveyard')">GRAVEYARD</button>
+        </nav>
+    </header>
 
     <!-- Wishlist Controls -->
     <div class="controls-bar" id="wishlist-controls">
         <div class="filters-group">
-            <label style="font-size: 12px; font-weight: 600;">FILTER BY:</label>
-            
+            <input type="search" id="filter-search" placeholder="Search your wishlist (linen, pink, Zara…)" oninput="renderWishlist()">
+
             <select id="filter-category" onchange="renderWishlist()">
-                <option value="ALL">ALL CATEGORIES</option>
+                <option value="ALL">ALL TYPES</option>
                 <option value="Tops">TOPS</option>
                 <option value="Bottoms">BOTTOMS</option>
-                <option value="Shoes">SHOES</option>
                 <option value="Outerwear">OUTERWEAR</option>
+                <option value="Shoes">SHOES</option>
                 <option value="Accessories">ACCESSORIES</option>
             </select>
 
             <select id="filter-color" onchange="renderWishlist()">
                 <option value="ALL">ALL COLORS</option>
-                <option value="Pink">PINK</option>
-                <option value="Black">BLACK</option>
-                <option value="White">WHITE</option>
-                <option value="Brown">BROWN</option>
-                <option value="Blue">BLUE</option>
+                <!-- filled in by script from COLORS -->
             </select>
 
             <select id="filter-sort" onchange="renderWishlist()">
@@ -646,20 +787,13 @@
     <main>
         <!-- WISHLIST VIEW -->
         <div id="view-wishlist">
-            <div class="wishlist-grid" id="grid-wishlist">
-                <!-- Add Card Trigger -->
-                <div class="card card-add-trigger" onclick="openAddDrawer()">
-                    +
-                </div>
-                <!-- Dynamic cards render here -->
-            </div>
+            <div class="wishlist-grid" id="grid-wishlist"></div>
         </div>
 
         <!-- GRAVEYARD VIEW -->
         <div id="view-graveyard" class="hidden">
-            <div class="wishlist-grid" id="grid-graveyard">
-                <!-- Deleted items render here -->
-            </div>
+            <p class="view-note">Items you bought or no longer want. Restore anything to put it back on your wishlist.</p>
+            <div class="wishlist-grid" id="grid-graveyard"></div>
         </div>
 
         <!-- OUTFIT MODELER VIEW -->
@@ -667,51 +801,50 @@
             <div class="modeler-container">
                 <!-- Mannequin Fitting Area -->
                 <div class="mannequin-stage">
-                    <div class="total-counter" id="outfit-total">OUTFIT TOTAL: $0</div>
+                    <div class="total-counter">
+                        <span id="outfit-total">OUTFIT TOTAL: $0</span>
+                        <button class="btn-secondary" onclick="clearOutfit()">CLEAR</button>
+                    </div>
 
-                    <!-- Clean Androgynous Silhouette -->
-                    <svg class="silhouette-svg" viewBox="0 0 100 220">
-                        <!-- Head -->
-                        <circle cx="50" cy="22" r="11" />
-                        <!-- Neck -->
-                        <rect x="47" y="33" width="6" height="8" />
-                        <!-- Torso/Shoulders -->
-                        <path d="M 28 42 L 72 42 L 66 110 L 34 110 Z" />
-                        <!-- Arms -->
-                        <path d="M 27 43 L 18 105 L 23 107 L 31 50 Z" />
-                        <!-- Left Arm -->
-                        <path d="M 73 43 L 82 105 L 77 107 L 69 50 Z" />
-                        <!-- Right Arm -->
-                        <!-- Legs -->
-                        <rect x="36" y="112" width="11" height="85" />
-                        <rect x="53" y="112" width="11" height="85" />
-                        <!-- Feet -->
-                        <path d="M 33 197 L 47 197 L 47 203 L 31 203 Z" />
-                        <path d="M 53 197 L 67 197 L 69 203 L 53 203 Z" />
-                    </svg>
+                    <!-- Figure: silhouette + garments layered on top -->
+                    <div class="figure" id="figure"
+                         ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, null)">
+                        <svg class="silhouette-svg" viewBox="0 0 100 220" aria-hidden="true">
+                            <circle cx="50" cy="22" r="11" />
+                            <rect x="47" y="33" width="6" height="8" />
+                            <path d="M 28 42 L 72 42 L 66 110 L 34 110 Z" />
+                            <path d="M 27 43 L 18 105 L 23 107 L 31 50 Z" />
+                            <path d="M 73 43 L 82 105 L 77 107 L 69 50 Z" />
+                            <rect x="36" y="112" width="11" height="85" />
+                            <rect x="53" y="112" width="11" height="85" />
+                            <path d="M 33 197 L 47 197 L 47 203 L 31 203 Z" />
+                            <path d="M 53 197 L 67 197 L 69 203 L 53 203 Z" />
+                        </svg>
+                        <div id="figure-layer"></div>
+                    </div>
 
                     <!-- Slot Dropzones -->
-                    <div class="slot-zone slot-zone-head" data-slot="Head" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Head')">
+                    <div class="slot-zone slot-zone-head" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Head')">
                         <span class="slot-label">HEAD</span>
                         <div id="slot-content-Head"></div>
                     </div>
 
-                    <div class="slot-zone slot-zone-top" data-slot="Tops" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Tops')">
+                    <div class="slot-zone slot-zone-top" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Tops')">
                         <span class="slot-label">TOPS / OUTER</span>
                         <div id="slot-content-Tops"></div>
                     </div>
 
-                    <div class="slot-zone slot-zone-bottom" data-slot="Bottoms" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Bottoms')">
+                    <div class="slot-zone slot-zone-bottom" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Bottoms')">
                         <span class="slot-label">BOTTOMS</span>
                         <div id="slot-content-Bottoms"></div>
                     </div>
 
-                    <div class="slot-zone slot-zone-shoes" data-slot="Shoes" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Shoes')">
+                    <div class="slot-zone slot-zone-shoes" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Shoes')">
                         <span class="slot-label">SHOES</span>
                         <div id="slot-content-Shoes"></div>
                     </div>
 
-                    <div class="slot-zone slot-zone-accessory" data-slot="Accessories" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Accessories')">
+                    <div class="slot-zone slot-zone-accessory" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'Accessories')">
                         <span class="slot-label">ACCESSORIES</span>
                         <div id="slot-content-Accessories"></div>
                     </div>
@@ -729,21 +862,20 @@
                                 <option value="ALL">ALL CLOTHING TYPES</option>
                                 <option value="Tops">TOPS</option>
                                 <option value="Bottoms">BOTTOMS</option>
-                                <option value="Shoes">SHOES</option>
                                 <option value="Outerwear">OUTERWEAR</option>
+                                <option value="Shoes">SHOES</option>
                                 <option value="Accessories">ACCESSORIES</option>
                             </select>
-                            
+
                             <div class="search-box-wrap">
-                                <input type="text" id="modeler-search-input" placeholder="Search new items..." style="flex:1;" onkeydown="if(event.key==='Enter') executeModelerSearch()">
+                                <input type="text" id="modeler-search-input" placeholder="Search new items…" style="flex:1;" onkeydown="if(event.key==='Enter') executeModelerSearch()">
                                 <button class="btn-primary" style="width: auto; padding: 0 12px;" onclick="executeModelerSearch()">AI SEARCH</button>
                             </div>
+                            <div class="sidebar-hint">Click an item to put it on the mannequin, or drag it to a slot.</div>
                         </div>
                     </div>
 
-                    <div class="sidebar-items-grid" id="modeler-sidebar-grid">
-                        <!-- Items rendered here -->
-                    </div>
+                    <div class="sidebar-items-grid" id="modeler-sidebar-grid"></div>
                 </div>
             </div>
         </div>
@@ -756,611 +888,922 @@
     <div class="drawer" id="add-drawer">
         <div class="drawer-header">
             <h3 style="font-size: 14px; text-transform: uppercase;">ADD ITEM</h3>
-            <button class="close-btn" onclick="closeAllDrawers()">✕</button>
+            <button class="close-btn" onclick="closeAllDrawers()" aria-label="Close">✕</button>
         </div>
 
         <div class="form-group">
-            <label>PASTE SPECIFIC ITEM LINK</label>
-            <input type="text" id="add-link-input" placeholder="https://store.com/item-url...">
-            <button class="btn-primary" style="margin-top: 8px;" onclick="addSpecificItem()">ADD LINK ITEM</button>
+            <label for="add-link-input">PASTE SPECIFIC ITEM LINK</label>
+            <input type="text" id="add-link-input" placeholder="https://store.com/item-url..." onkeydown="if(event.key==='Enter') addSpecificItem()">
+            <button class="btn-primary" id="btn-add-link" style="margin-top: 8px;" onclick="addSpecificItem()">ADD LINK ITEM</button>
+            <div class="status-msg" id="add-link-status"></div>
         </div>
 
         <div style="text-align: center; font-size: 11px; color: var(--mid-gray); margin: 20px 0;">— OR —</div>
 
         <div class="form-group">
-            <label>GENERAL ITEM IDEA</label>
+            <label for="add-general-input">GENERAL ITEM IDEA</label>
             <textarea id="add-general-input" rows="3" placeholder="describe what you want (e.g. pink shorts, leather trench coat)..."></textarea>
             <button class="btn-primary" style="margin-top: 8px;" onclick="addGeneralItem()">CREATE GENERAL IDEA</button>
+            <div class="status-msg">Options from real stores start loading right away. It can take up to a minute.</div>
         </div>
     </div>
 
     <!-- GENERAL ITEM AI OPTIONS DRAWER -->
     <div class="drawer" id="ai-drawer">
         <div class="drawer-header">
-            <h3 style="font-size: 14px; text-transform: uppercase;" id="ai-drawer-title">PINK SHORTS</h3>
-            <button class="close-btn" onclick="closeAllDrawers()">✕</button>
+            <h3 style="font-size: 14px; text-transform: uppercase;" id="ai-drawer-title"></h3>
+            <button class="close-btn" onclick="closeAllDrawers()" aria-label="Close">✕</button>
         </div>
 
-                    <!-- Inner Drawer Tab Bar -->
-                    <div class="flex border-b border-zinc-200 mb-4 flex-shrink-0">
-                        <button id="ai-tab-search" onclick="switchAIOptionTab('search')" class="px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 border-zinc-900 text-zinc-900 flex items-center space-x-2">
-                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                            <span>AI Suggestions</span>
-                        </button>
-                        <button id="ai-tab-saved" onclick="switchAIOptionTab('saved')" class="px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 border-transparent text-zinc-500 hover:text-zinc-900 flex items-center space-x-2">
-                            <i data-lucide="bookmark" class="w-3.5 h-3.5"></i>
-                            <span>Saved Items</span>
-                            <span id="badge-ai-saved" class="ml-1 px-1.5 py-0.2 text-[10px] bg-zinc-200 text-zinc-800 font-semibold">0</span>
-                        </button>
-                    </div>
+        <div class="drawer-tabs">
+            <button class="drawer-tab active" id="tab-ai-search" onclick="switchDrawerTab('search')">AI DISCOVER</button>
+            <button class="drawer-tab" id="tab-ai-saved" onclick="switchDrawerTab('saved')">SAVED OPTIONS (<span id="saved-count">0</span>)</button>
+        </div>
 
         <!-- SEARCH TAB -->
         <div id="drawer-view-search">
-            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-                <select id="ai-filter-price" style="flex: 1;" onchange="renderAiDiscover()">
+            <div class="discover-toolbar">
+                <select id="ai-filter-price" onchange="renderAiDiscover()">
                     <option value="ALL">ANY PRICE</option>
                     <option value="UNDER_50">UNDER $50</option>
                     <option value="50_150">$50 - $150</option>
                     <option value="OVER_150">OVER $150</option>
                 </select>
-                <select id="ai-filter-size" style="flex: 1;">
+                <select id="ai-filter-size" onchange="renderAiDiscover()">
                     <option value="ALL">ALL SIZES</option>
                     <option value="S">SMALL (S)</option>
                     <option value="M">MEDIUM (M)</option>
                     <option value="L">LARGE (L)</option>
                 </select>
+                <button class="btn-secondary" onclick="renderAiDiscover(true)" title="Search again for different options">NEW RESULTS</button>
             </div>
 
-            <div class="ai-grid" id="ai-discover-grid">
-                <!-- AI results rendered here -->
-            </div>
+            <div class="ai-grid" id="ai-discover-grid"></div>
         </div>
 
         <!-- SAVED TAB -->
         <div id="drawer-view-saved" class="hidden">
-            <div class="ai-grid" id="ai-saved-grid">
-                <!-- Saved items rendered here -->
-            </div>
+            <div class="ai-grid" id="ai-saved-grid"></div>
         </div>
     </div>
 
-    </main>
-
-    <!-- APPLICATION LOGIC & 3D MANNEQUIN RENDERER -->
     <script>
-        // Data State
-        let wishlistData = [
-            {
-                id: '1',
-                type: 'specific',
-                title: 'Mohair Pink Sweater',
-                price: 214,
-                category: 'Tops',
-                color: 'Pink',
-                image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=400&auto=format&fit=crop&q=60',
-                dateAdded: 1000
-            },
-            {
-                id: '2',
-                type: 'general',
-                title: 'Pink Shorts',
-                category: 'Bottoms',
-                color: 'Pink',
-                dateAdded: 2000,
-                savedOptions: [
-                    {
-                        id: 'opt-1',
-                        title: 'H&M Linen Pink Shorts',
-                        brand: 'H&M',
-                        price: 35,
-                        category: 'Bottoms',
-                        color: 'Pink',
-                        image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&auto=format&fit=crop&q=60'
-                    }
-                ]
-            }
-        ];
+        // ============================================================
+        //  CONNECTION TO THE BACKEND
+        //  Local testing: "http://localhost:3000"
+        //  After deploying: your Render URL, e.g. "https://wishlist-backend-xxxx.onrender.com"
+        // ============================================================
+        const API = "http://localhost:3000";
 
+        // Same color list the server uses, so filters always match the tags
+        const COLORS = ["black", "white", "cream", "gray", "beige", "brown", "red", "pink", "orange",
+                        "yellow", "green", "blue", "navy", "purple", "metallic", "multicolor"];
+
+        const STORAGE_KEY = "wishlist-app-v1";
+
+        // ---------- data state (saved in this browser with localStorage) ----------
+        let wishlistData = [];
         let graveyardData = [];
+        let outfitSlots = { Head: null, Tops: null, Bottoms: null, Shoes: null, Accessories: null };
+
         let activeGeneralItemId = null;
-        let outfitSlots = {
-            Head: null,
-            Tops: null,
-            Bottoms: null,
-            Shoes: null,
-            Accessories: null
-        };
+        let discoverResults = [];          // what the AI DISCOVER tab is currently showing
+        const pendingSearches = new Map(); // avoids sending the same search twice at once
 
-        let modelerSearchResults = null; // null means showing wishlist
+        // Modeler sidebar: showing the wishlist, or a list of search results
+        let modelerView = { mode: "wishlist", label: "", status: "ready", results: [], error: "" };
 
-        // Mock AI Database Pool
-        const mockAiDatabase = [
-            { id: 'ai-1', title: 'Zara High-Waist Pink Shorts', brand: 'Zara', price: 45, category: 'Bottoms', color: 'Pink', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&auto=format&fit=crop&q=60' },
-            { id: 'ai-2', title: 'Jacquemus Pink Tailored Shorts', brand: 'Jacquemus', price: 280, category: 'Bottoms', color: 'Pink', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&auto=format&fit=crop&q=60' },
-            { id: 'ai-3', title: 'Acne Studios Pink Cotton Shorts', brand: 'Acne Studios', price: 190, category: 'Bottoms', color: 'Pink', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&auto=format&fit=crop&q=60' },
-            { id: 'ai-4', title: 'Ganni Pleated Pink Shorts', brand: 'Ganni', price: 120, category: 'Bottoms', color: 'Pink', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&auto=format&fit=crop&q=60' },
-            { id: 'ai-5', title: 'Black Oversized Leather Jacket', brand: 'Acne Studios', price: 650, category: 'Outerwear', color: 'Black', image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&auto=format&fit=crop&q=60' },
-            { id: 'ai-6', title: 'White Chunky Sneakers', brand: 'Balenciaga', price: 890, category: 'Shoes', color: 'White', image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&auto=format&fit=crop&q=60' },
-            { id: 'ai-7', title: 'Classic Leather Tote', brand: 'Saint Laurent', price: 1250, category: 'Accessories', color: 'Black', image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&auto=format&fit=crop&q=60' }
-        ];
+        // ---------- small helpers ----------
 
-        // Initialization
-        window.onload = () => {
-            renderWishlist();
-            renderModelerSidebar();
-        };
+        // Text from other websites is escaped before it goes into the page, so a product name
+        // can never inject HTML or scripts.
+        function esc(s) {
+            return String(s ?? "").replace(/[&<>"']/g, (c) =>
+                ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        }
 
-        // Navigation
-        function switchView(viewName) {
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`tab-${viewName}`).classList.add('active');
+        function money(p) {
+            if (p == null || p === "") return "";
+            const n = Number(p);
+            return Number.isFinite(n) ? `$${n % 1 ? n.toFixed(2) : n}` : "";
+        }
 
-            document.getElementById('view-wishlist').classList.add('hidden');
-            document.getElementById('view-graveyard').classList.add('hidden');
-            document.getElementById('view-modeler').classList.add('hidden');
+        function newId() {
+            return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        }
 
-            document.getElementById('wishlist-controls').style.display = viewName === 'wishlist' ? 'flex' : 'none';
+        function storeName(url) {
+            try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; }
+        }
 
-            if (viewName === 'wishlist') {
-                document.getElementById('view-wishlist').classList.remove('hidden');
-                renderWishlist();
-            } else if (viewName === 'graveyard') {
-                document.getElementById('view-graveyard').classList.remove('hidden');
-                renderGraveyard();
-            } else if (viewName === 'modeler') {
-                document.getElementById('view-modeler').classList.remove('hidden');
-                renderModelerSidebar();
+        function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ""; }
+
+        // Background-removed version of an image, made by the server
+        function cutoutUrl(imageUrl) {
+            return `${API}/api/remove-bg?url=${encodeURIComponent(imageUrl)}`;
+        }
+
+        // Calls the backend and returns its JSON, or throws an Error with a readable message
+        async function api(path, params = {}) {
+            const qs = new URLSearchParams(
+                Object.entries(params).filter(([, v]) => v != null && v !== "" && v !== "ALL")
+            );
+            let res;
+            try {
+                res = await fetch(`${API}${path}?${qs}`);
+            } catch {
+                throw new Error("Can't reach the server. Is it running?");
+            }
+            const data = await res.json().catch(() => ({ error: `Server error ${res.status}` }));
+            if (!res.ok || data.error) throw new Error(data.error || `Server error ${res.status}`);
+            return data;
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({ wishlistData, graveyardData, outfitSlots }));
+            } catch (e) {
+                console.warn("Couldn't save to this browser:", e);
             }
         }
 
-        // Render Wishlist Grid
+        function loadState() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+                if (!saved) return;
+                wishlistData = saved.wishlistData ?? [];
+                graveyardData = saved.graveyardData ?? [];
+                outfitSlots = { ...outfitSlots, ...(saved.outfitSlots ?? {}) };
+            } catch {
+                /* first visit or unreadable data: start empty */
+            }
+        }
+
+        function setStatus(id, text, isError = false) {
+            const el = document.getElementById(id);
+            el.textContent = text;
+            el.classList.toggle("error", isError);
+        }
+
+        // ---------- turning server data into app items ----------
+
+        // /api/scrape response → wishlist item
+        function itemFromScrape(d) {
+            return {
+                id: newId(),
+                type: "specific",
+                title: d.name || "Untitled item",
+                price: d.price ?? null,
+                url: d.url,
+                image: d.image,
+                store: storeName(d.url),
+                category: d.category || "Accessories", // Tops / Bottoms / Outerwear / Shoes / Accessories
+                subcategory: d.subcategory || null,    // shorts, hat, sweater...
+                color: d.color || null,
+                colorDetail: d.colorDetail || null,
+                pattern: d.pattern || null,
+                material: d.material || null,
+                descriptors: d.descriptors || [],
+                dateAdded: Date.now(),
+            };
+        }
+
+        // /api/search result → option card (also usable on the mannequin)
+        function optionFromResult(r, fallbackCategory, fallbackColor) {
+            return {
+                id: newId(),
+                title: r.name || "Untitled item",
+                price: r.price ?? null,
+                url: r.url,
+                image: r.image,
+                store: r.store || storeName(r.url),
+                category: r.category || fallbackCategory || "Accessories",
+                color: r.color || fallbackColor || null,
+                matched: r.matched || null,
+                variantName: r.variantName || null,
+            };
+        }
+
+        // Adds a product (from a search option or the mannequin) to the wishlist.
+        // Re-reads the product page so it gets full tags; if the store blocks that,
+        // it still adds the item with the details we already have.
+        async function addProductToWishlist(opt, { color = null, size = null } = {}) {
+            let item;
+            try {
+                const d = await api("/api/scrape", { url: opt.url, color, size });
+                item = itemFromScrape(d);
+                if (!item.image) item.image = opt.image;
+            } catch (e) {
+                console.warn("Full tagging failed, adding with basic info:", e.message);
+                item = {
+                    id: newId(), type: "specific", title: opt.title, price: opt.price, url: opt.url,
+                    image: opt.image, store: opt.store || storeName(opt.url), category: opt.category || "Accessories",
+                    subcategory: null, color: opt.color || null, colorDetail: null, pattern: null,
+                    material: null, descriptors: [], dateAdded: Date.now(),
+                };
+            }
+            wishlistData.push(item);
+            saveState();
+            return item;
+        }
+
+        // ---------- AI search for general items ----------
+
+        function filtersFromControls() {
+            const price = document.getElementById("ai-filter-price").value;
+            const size = document.getElementById("ai-filter-size").value;
+            const f = {};
+            if (price === "UNDER_50") f.maxPrice = 50;
+            if (price === "50_150") { f.minPrice = 50; f.maxPrice = 150; }
+            if (price === "OVER_150") f.minPrice = 150;
+            if (size !== "ALL") f.size = size;
+            return f;
+        }
+
+        // Runs /api/search for a general item and remembers the results on the item,
+        // one set per filter combination, so reopening the drawer is instant.
+        async function searchForGeneral(item, filters = {}, { fresh = false } = {}) {
+            const key = JSON.stringify(filters);
+            item.searchCache = item.searchCache || {};
+            if (!fresh && item.searchCache[key]) return item.searchCache[key];
+
+            const pendingKey = `${item.id}|${key}`;
+            if (pendingSearches.has(pendingKey)) return pendingSearches.get(pendingKey);
+
+            const job = (async () => {
+                const data = await api("/api/search", { q: item.title, ...filters });
+                if (data.itemType) item.category = data.itemType;
+                if (data.targetColor) item.color = data.targetColor.toLowerCase();
+                item.targetColor = data.targetColor || null;
+
+                const results = data.results.map((r) => optionFromResult(r, item.category, item.color));
+                item.searchCache[key] = results;
+                if (key === "{}" || !item.searchResults?.length) item.searchResults = results; // feeds the rotating card
+                saveState();
+                return results;
+            })();
+
+            pendingSearches.set(pendingKey, job);
+            try {
+                return await job;
+            } finally {
+                pendingSearches.delete(pendingKey);
+                refreshVisibleViews();
+            }
+        }
+
+        function isSearching(item) {
+            return [...pendingSearches.keys()].some((k) => k.startsWith(item.id + "|"));
+        }
+
+        // Images the general item's card cycles through: saved picks first, then search results
+        function rotationImages(item) {
+            const imgs = [...(item.savedOptions || []), ...(item.searchResults || [])]
+                .map((o) => o.image).filter(Boolean);
+            return [...new Set(imgs)].slice(0, 12);
+        }
+
+        // ---------- navigation ----------
+
+        let currentView = "wishlist";
+
+        function switchView(viewName) {
+            currentView = viewName;
+            document.querySelectorAll(".nav-btn").forEach((btn) => btn.classList.remove("active"));
+            document.getElementById(`tab-${viewName}`).classList.add("active");
+
+            ["wishlist", "graveyard", "modeler"].forEach((v) =>
+                document.getElementById(`view-${v}`).classList.toggle("hidden", v !== viewName));
+            document.getElementById("wishlist-controls").style.display = viewName === "wishlist" ? "flex" : "none";
+
+            refreshVisibleViews();
+        }
+
+        function refreshVisibleViews() {
+            if (currentView === "wishlist") renderWishlist();
+            if (currentView === "graveyard") renderGraveyard();
+            if (currentView === "modeler") { renderModelerSidebar(); renderSlots(); }
+            if (document.getElementById("ai-drawer").classList.contains("open")) {
+                updateSavedCount();
+            }
+        }
+
+        // ---------- wishlist ----------
+
         function renderWishlist() {
-            const grid = document.getElementById('grid-wishlist');
-            grid.innerHTML = `<div class="card card-add-trigger" onclick="openAddDrawer()">+</div>`;
+            const grid = document.getElementById("grid-wishlist");
+            grid.innerHTML = `<div class="card card-add-trigger" role="button" tabindex="0" aria-label="Add item"
+                onclick="openAddDrawer()" onkeydown="if(event.key==='Enter') openAddDrawer()">+</div>`;
 
-            const catFilter = document.getElementById('filter-category').value;
-            const colorFilter = document.getElementById('filter-color').value;
-            const sortFilter = document.getElementById('filter-sort').value;
+            const query = document.getElementById("filter-search").value.trim().toLowerCase();
+            const catFilter = document.getElementById("filter-category").value;
+            const colorFilter = document.getElementById("filter-color").value;
+            const sortFilter = document.getElementById("filter-sort").value;
 
-            let items = wishlistData.filter(item => {
-                if (catFilter !== 'ALL' && item.category !== catFilter) return false;
-                if (colorFilter !== 'ALL' && item.color !== colorFilter) return false;
+            let items = wishlistData.filter((item) => {
+                if (catFilter !== "ALL" && item.category !== catFilter) return false;
+                if (colorFilter !== "ALL" && item.color !== colorFilter) return false;
+                if (query) {
+                    const haystack = [item.title, item.store, item.category, item.subcategory, item.color,
+                        item.colorDetail, item.material, item.pattern, ...(item.descriptors || [])]
+                        .filter(Boolean).join(" ").toLowerCase();
+                    if (!haystack.includes(query)) return false;
+                }
                 return true;
             });
 
-            if (sortFilter === 'PRICE_LOW') {
-                items.sort((a,b) => (a.price || 0) - (b.price || 0));
-            } else if (sortFilter === 'PRICE_HIGH') {
-                items.sort((a,b) => (b.price || 0) - (a.price || 0));
-            } else {
-                items.sort((a,b) => b.dateAdded - a.dateAdded);
+            if (sortFilter === "PRICE_LOW") items.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
+            else if (sortFilter === "PRICE_HIGH") items.sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
+            else items.sort((a, b) => b.dateAdded - a.dateAdded);
+
+            if (!items.length && wishlistData.length) {
+                grid.insertAdjacentHTML("beforeend", `<div class="empty-msg">Nothing matches these filters.</div>`);
             }
 
-            items.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'card';
+            items.forEach((item) => {
+                const card = document.createElement("div");
+                card.className = "card";
+                card.tabIndex = 0;
 
-                if (item.type === 'specific') {
+                if (item.type === "specific") {
+                    const tags = [item.colorDetail || item.color, item.material, item.subcategory || item.category]
+                        .filter(Boolean).join(", ");
+                    card.title = item.url ? `Open at ${item.store || "store"}` : "";
+                    card.onclick = () => item.url && window.open(item.url, "_blank", "noopener");
+                    card.onkeydown = (e) => { if (e.key === "Enter") card.onclick(); };
                     card.innerHTML = `
-                        <button class="trash-btn" onclick="moveToGraveyard(event, '${item.id}')">✕</button>
+                        <button class="trash-btn" onclick="moveToGraveyard(event, '${item.id}')" aria-label="Move to graveyard">✕</button>
                         <div class="card-img-container">
-                            <img src="${item.image}" class="card-img" alt="${item.title}">
+                            ${item.image
+                                ? `<img src="${esc(item.image)}" class="card-img" alt="" referrerpolicy="no-referrer">`
+                                : `<div class="card-placeholder">${esc(item.title)}</div>`}
                         </div>
                         <div class="card-details">
-                            <div class="card-title">${item.title}</div>
-                            <div class="card-price">$${item.price}</div>
-                        </div>
-                    `;
+                            <div class="card-title">${esc(item.title)}</div>
+                            <div class="card-price">${money(item.price) || "Price unknown"}</div>
+                            <div class="card-tags">${esc(tags || item.store)}</div>
+                        </div>`;
                 } else {
-                    // General Idea rotating concept card
+                    // General idea: rotating box of options found online
+                    const imgs = rotationImages(item);
+                    const searching = isSearching(item);
+                    const optionCount = item.searchResults?.length || 0;
                     card.onclick = () => openAiDrawer(item.id);
+                    card.onkeydown = (e) => { if (e.key === "Enter") openAiDrawer(item.id); };
                     card.innerHTML = `
-                        <button class="trash-btn" onclick="moveToGraveyard(event, '${item.id}')">✕</button>
+                        <button class="trash-btn" onclick="moveToGraveyard(event, '${item.id}')" aria-label="Move to graveyard">✕</button>
                         <span class="card-badge">GENERAL IDEA</span>
                         <div class="card-img-container">
-                            <div style="font-size: 12px; text-transform: uppercase; text-align: center; padding: 12px; font-weight: 600;">
-                                ${item.title}<br>
-                                <span style="font-size: 10px; color: var(--mid-gray); font-weight: 400; text-transform: none; margin-top: 6px; display:block;">Click for AI options (${item.savedOptions ? item.savedOptions.length : 0} saved)</span>
-                            </div>
+                            ${imgs.length
+                                ? `<img src="${esc(imgs[0])}" class="card-img card-img-fade" alt="" data-rotate="${item.id}" referrerpolicy="no-referrer">`
+                                : `<div class="card-placeholder">${esc(item.title)}
+                                     <small>${searching ? "Finding options in stores…" : "Click to find options"}</small></div>`}
                         </div>
                         <div class="card-details">
-                            <div class="card-title">${item.title}</div>
-                            <div class="card-price" style="font-size:10px; color: var(--mid-gray);">EXPLORE OPTIONS →</div>
-                        </div>
-                    `;
+                            <div class="card-title">${esc(item.title)}</div>
+                            <div class="card-price" style="font-size:10px; color: var(--mid-gray);">
+                                ${optionCount} options, ${item.savedOptions?.length || 0} saved
+                            </div>
+                        </div>`;
                 }
-
                 grid.appendChild(card);
             });
         }
 
-        // Render Graveyard Tab
-        function renderGraveyard() {
-            const grid = document.getElementById('grid-graveyard');
-            grid.innerHTML = '';
+        // Every 3 seconds, each general card shows its next option image
+        let rotationTick = 0;
+        setInterval(() => {
+            rotationTick++;
+            document.querySelectorAll("img[data-rotate]").forEach((img) => {
+                const item = wishlistData.find((i) => i.id === img.dataset.rotate);
+                const imgs = item ? rotationImages(item) : [];
+                if (imgs.length < 2) return;
+                img.style.opacity = 0;
+                setTimeout(() => { img.src = imgs[rotationTick % imgs.length]; img.style.opacity = 1; }, 300);
+            });
+        }, 3000);
 
-            if (graveyardData.length === 0) {
-                grid.innerHTML = `<div style="grid-column: 1/-1; color: var(--mid-gray); font-size: 13px;">Graveyard is empty.</div>`;
+        // ---------- graveyard ----------
+
+        function renderGraveyard() {
+            const grid = document.getElementById("grid-graveyard");
+            grid.innerHTML = "";
+
+            if (!graveyardData.length) {
+                grid.innerHTML = `<div class="empty-msg">Graveyard is empty.</div>`;
                 return;
             }
 
-            graveyardData.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'card';
+            graveyardData.forEach((item) => {
+                const img = item.image || rotationImages(item)[0];
+                const card = document.createElement("div");
+                card.className = "card";
+                card.style.cursor = "default";
                 card.innerHTML = `
                     <div class="card-img-container">
-                        ${item.image ? `<img src="${item.image}" class="card-img">` : `<div style="font-size:11px;">${item.title}</div>`}
+                        ${img ? `<img src="${esc(img)}" class="card-img" alt="" referrerpolicy="no-referrer">`
+                              : `<div class="card-placeholder">${esc(item.title)}</div>`}
                     </div>
                     <div class="card-details">
-                        <div class="card-title">${item.title}</div>
-                        <button class="btn-primary" style="padding: 4px; font-size: 9px; margin-top: 4px;" onclick="restoreFromGraveyard('${item.id}')">RESTORE</button>
-                    </div>
-                `;
+                        <div class="card-title">${esc(item.title)}</div>
+                        <button class="btn-primary" style="padding: 4px; font-size: 9px; margin-top: 4px;"
+                            onclick="restoreFromGraveyard('${item.id}')">RESTORE</button>
+                    </div>`;
                 grid.appendChild(card);
             });
         }
 
-        // Drawers Management
-        function openAddDrawer() {
-            document.getElementById('drawer-overlay').classList.add('open');
-            document.getElementById('add-drawer').classList.add('open');
-        }
-
-        function closeAllDrawers() {
-            document.getElementById('drawer-overlay').classList.remove('open');
-            document.getElementById('add-drawer').classList.remove('open');
-            document.getElementById('ai-drawer').classList.remove('open');
-        }
-
-        // Add Items
-        function addSpecificItem() {
-            const link = document.getElementById('add-link-input').value.trim();
-            if (!link) return;
-
-            const newItem = {
-                id: Date.now().toString(),
-                type: 'specific',
-                title: 'Imported Item ' + Math.floor(Math.random()*100),
-                price: Math.floor(Math.random() * 150) + 25,
-                category: 'Tops',
-                color: 'Black',
-                image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400&auto=format&fit=crop&q=60',
-                dateAdded: Date.now()
-            };
-
-            wishlistData.push(newItem);
-            document.getElementById('add-link-input').value = '';
-            closeAllDrawers();
-            renderWishlist();
-        }
-
-        function addGeneralItem() {
-            const prompt = document.getElementById('add-general-input').value.trim();
-            if (!prompt) return;
-
-            const newItem = {
-                id: Date.now().toString(),
-                type: 'general',
-                title: prompt,
-                category: 'Bottoms',
-                color: 'Pink',
-                dateAdded: Date.now(),
-                savedOptions: []
-            };
-
-            wishlistData.push(newItem);
-            document.getElementById('add-general-input').value = '';
-            closeAllDrawers();
-            renderWishlist();
-        }
-
-        // Graveyard Actions
         function moveToGraveyard(event, itemId) {
             event.stopPropagation();
-            const idx = wishlistData.findIndex(i => i.id === itemId);
-            if (idx !== -1) {
-                graveyardData.push(wishlistData[idx]);
-                wishlistData.splice(idx, 1);
-                renderWishlist();
-            }
+            const idx = wishlistData.findIndex((i) => i.id === itemId);
+            if (idx === -1) return;
+            graveyardData.push(wishlistData[idx]);
+            wishlistData.splice(idx, 1);
+            saveState();
+            renderWishlist();
         }
 
         function restoreFromGraveyard(itemId) {
-            const idx = graveyardData.findIndex(i => i.id === itemId);
-            if (idx !== -1) {
-                wishlistData.push(graveyardData[idx]);
-                graveyardData.splice(idx, 1);
-                renderGraveyard();
+            const idx = graveyardData.findIndex((i) => i.id === itemId);
+            if (idx === -1) return;
+            wishlistData.push(graveyardData[idx]);
+            graveyardData.splice(idx, 1);
+            saveState();
+            renderGraveyard();
+        }
+
+        // ---------- drawers ----------
+
+        function openAddDrawer() {
+            setStatus("add-link-status", "");
+            document.getElementById("drawer-overlay").classList.add("open");
+            document.getElementById("add-drawer").classList.add("open");
+            document.getElementById("add-link-input").focus();
+        }
+
+        function closeAllDrawers() {
+            document.getElementById("drawer-overlay").classList.remove("open");
+            document.getElementById("add-drawer").classList.remove("open");
+            document.getElementById("ai-drawer").classList.remove("open");
+            activeGeneralItemId = null;
+            renderWishlist();
+        }
+
+        // ---------- adding items ----------
+
+        async function addSpecificItem() {
+            const input = document.getElementById("add-link-input");
+            const link = input.value.trim();
+            if (!link) return;
+            if (!/^https?:\/\//.test(link)) {
+                return setStatus("add-link-status", "Paste the full link, starting with https://", true);
+            }
+
+            const btn = document.getElementById("btn-add-link");
+            btn.disabled = true;
+            btn.textContent = "READING PAGE…";
+            setStatus("add-link-status", "Getting the image, price and tags. This takes about 10 to 20 seconds.");
+
+            try {
+                const data = await api("/api/scrape", { url: link });
+                wishlistData.push(itemFromScrape(data));
+                saveState();
+                input.value = "";
+                setStatus("add-link-status", "");
+                closeAllDrawers();
+                renderWishlist();
+            } catch (e) {
+                setStatus("add-link-status", `Couldn't add this link: ${e.message}`, true);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "ADD LINK ITEM";
             }
         }
 
-        // General Item AI Options Drawer
+        function addGeneralItem() {
+            const input = document.getElementById("add-general-input");
+            const prompt = input.value.trim();
+            if (!prompt) return;
+
+            const item = {
+                id: newId(),
+                type: "general",
+                title: prompt,
+                category: null,  // filled in by the search (e.g. "Bottoms")
+                color: null,     // filled in by the search (e.g. "pink")
+                dateAdded: Date.now(),
+                savedOptions: [],
+                searchResults: null,
+                searchCache: {},
+            };
+
+            wishlistData.push(item);
+            saveState();
+            input.value = "";
+            closeAllDrawers();
+            renderWishlist();
+
+            // Start finding options right away so the card can start rotating
+            searchForGeneral(item, {}).catch((e) => console.warn("Search failed:", e.message));
+        }
+
+        // ---------- general item drawer: discover + saved ----------
+
+        function activeGeneral() {
+            return wishlistData.find((i) => i.id === activeGeneralItemId);
+        }
+
         function openAiDrawer(itemId) {
             activeGeneralItemId = itemId;
-            const item = wishlistData.find(i => i.id === itemId);
+            const item = activeGeneral();
             if (!item) return;
 
-            document.getElementById('ai-drawer-title').innerText = item.title;
-            document.getElementById('drawer-overlay').classList.add('open');
-            document.getElementById('ai-drawer').classList.add('open');
+            document.getElementById("ai-drawer-title").textContent = item.title;
+            document.getElementById("drawer-overlay").classList.add("open");
+            document.getElementById("ai-drawer").classList.add("open");
 
-            switchDrawerTab('search');
-            renderAiDiscover();
+            switchDrawerTab("search");
             updateSavedCount();
         }
 
         function switchDrawerTab(tab) {
-            document.getElementById('tab-ai-search').classList.toggle('active', tab === 'search');
-            document.getElementById('tab-ai-saved').classList.toggle('active', tab === 'saved');
+            document.getElementById("tab-ai-search").classList.toggle("active", tab === "search");
+            document.getElementById("tab-ai-saved").classList.toggle("active", tab === "saved");
+            document.getElementById("drawer-view-search").classList.toggle("hidden", tab !== "search");
+            document.getElementById("drawer-view-saved").classList.toggle("hidden", tab !== "saved");
 
-            document.getElementById('drawer-view-search').classList.toggle('hidden', tab !== 'search');
-            document.getElementById('drawer-view-saved').classList.toggle('hidden', tab !== 'saved');
-
-            if (tab === 'saved') renderAiSaved();
+            if (tab === "search") renderAiDiscover();
+            if (tab === "saved") renderAiSaved();
         }
 
-        function renderAiDiscover() {
-            const grid = document.getElementById('ai-discover-grid');
-            grid.innerHTML = '';
+        async function renderAiDiscover(fresh = false) {
+            const item = activeGeneral();
+            if (!item) return;
+            const grid = document.getElementById("ai-discover-grid");
+            const filters = filtersFromControls();
+            const key = JSON.stringify(filters);
 
-            const priceFilter = document.getElementById('ai-filter-price').value;
+            const cached = !fresh && item.searchCache?.[key];
+            if (cached) return drawDiscover(cached);
 
-            let options = mockAiDatabase.filter(item => {
-                if (priceFilter === 'UNDER_50' && item.price >= 50) return false;
-                if (priceFilter === '50_150' && (item.price < 50 || item.price > 150)) return false;
-                if (priceFilter === 'OVER_150' && item.price <= 150) return false;
-                return true;
-            });
+            grid.innerHTML = `<div class="empty-msg">Searching real stores for “${esc(item.title)}”. This can take up to a minute.</div>`;
+            try {
+                const results = await searchForGeneral(item, filters, { fresh });
+                // Only draw if the person is still looking at this item with these filters
+                if (activeGeneralItemId === item.id && JSON.stringify(filtersFromControls()) === key) drawDiscover(results);
+            } catch (e) {
+                if (activeGeneralItemId !== item.id) return;
+                grid.innerHTML = `<div class="empty-msg">Search failed: ${esc(e.message)}
+                    <br><br><button class="btn-secondary" onclick="renderAiDiscover(true)">TRY AGAIN</button></div>`;
+            }
+        }
 
-            options.forEach(opt => {
-                const card = document.createElement('div');
-                card.className = 'ai-item-card';
+        function drawDiscover(results) {
+            const item = activeGeneral();
+            const grid = document.getElementById("ai-discover-grid");
+            discoverResults = results;
+
+            if (!results.length) {
+                grid.innerHTML = `<div class="empty-msg">No matches with these filters. Try a wider price range or any size.</div>`;
+                return;
+            }
+
+            const savedUrls = new Set((item.savedOptions || []).map((o) => o.url));
+            grid.innerHTML = "";
+            results.forEach((opt, i) => {
+                const saved = savedUrls.has(opt.url);
+                const note = opt.matched === "image" && item.targetColor
+                    ? `<div class="ai-item-note">Choose ${esc(item.targetColor)} on the store page</div>` : "";
+                const card = document.createElement("div");
+                card.className = "ai-item-card";
                 card.innerHTML = `
-                    <img src="${opt.image}" class="ai-item-img">
-                    <div class="ai-item-title">${opt.title}</div>
-                    <div class="ai-item-brand">${opt.brand}</div>
-                    <div class="ai-item-price">$${opt.price}</div>
-                    <button class="ai-action-btn" onclick="saveAiOptionToGeneral('${opt.id}')">+ SAVE OPTION</button>
-                `;
+                    <img src="${esc(opt.image)}" class="ai-item-img" alt="" referrerpolicy="no-referrer">
+                    <div class="ai-item-title">${esc(opt.title)}</div>
+                    <div class="ai-item-brand">${esc(opt.store)}</div>
+                    <div class="ai-item-price">${money(opt.price) || "See store"}</div>
+                    ${note}
+                    <div class="ai-btn-row">
+                        <a class="ai-action-btn outline" href="${esc(opt.url)}" target="_blank" rel="noopener">VIEW</a>
+                        <button class="ai-action-btn" ${saved ? "disabled" : ""} onclick="saveAiOptionToGeneral(${i}, this)">
+                            ${saved ? "SAVED" : "+ SAVE"}</button>
+                    </div>`;
                 grid.appendChild(card);
             });
         }
 
-        function saveAiOptionToGeneral(optId) {
-            const genItem = wishlistData.find(i => i.id === activeGeneralItemId);
-            const opt = mockAiDatabase.find(o => o.id === optId);
+        function saveAiOptionToGeneral(index, btn) {
+            const item = activeGeneral();
+            const opt = discoverResults[index];
+            if (!item || !opt) return;
 
-            if (genItem && opt) {
-                if (!genItem.savedOptions) genItem.savedOptions = [];
-                if (!genItem.savedOptions.some(o => o.id === opt.id)) {
-                    genItem.savedOptions.push({...opt});
-                    updateSavedCount();
-                }
+            item.savedOptions = item.savedOptions || [];
+            if (!item.savedOptions.some((o) => o.url === opt.url)) {
+                item.savedOptions.push({ ...opt, id: newId() });
+                saveState();
             }
+            btn.disabled = true;
+            btn.textContent = "SAVED";
+            updateSavedCount();
         }
 
         function updateSavedCount() {
-            const genItem = wishlistData.find(i => i.id === activeGeneralItemId);
-            const count = genItem && genItem.savedOptions ? genItem.savedOptions.length : 0;
-            document.getElementById('saved-count').innerText = count;
+            const item = activeGeneral();
+            document.getElementById("saved-count").textContent = item?.savedOptions?.length || 0;
         }
 
         function renderAiSaved() {
-            const grid = document.getElementById('ai-saved-grid');
-            grid.innerHTML = '';
+            const grid = document.getElementById("ai-saved-grid");
+            const item = activeGeneral();
+            grid.innerHTML = "";
 
-            const genItem = wishlistData.find(i => i.id === activeGeneralItemId);
-            if (!genItem || !genItem.savedOptions || genItem.savedOptions.length === 0) {
-                grid.innerHTML = `<div style="grid-column: 1/-1; font-size:12px; color: var(--mid-gray);">No saved options yet. Click "+" in Discover tab to save options.</div>`;
+            if (!item?.savedOptions?.length) {
+                grid.innerHTML = `<div class="empty-msg">No saved options yet. Save options from the AI Discover tab.</div>`;
                 return;
             }
 
-            genItem.savedOptions.forEach((opt, idx) => {
-                const card = document.createElement('div');
-                card.className = 'ai-item-card';
+            item.savedOptions.forEach((opt, idx) => {
+                const card = document.createElement("div");
+                card.className = "ai-item-card";
                 card.innerHTML = `
-                    <img src="${opt.image}" class="ai-item-img">
-                    <div class="ai-item-title">${opt.title}</div>
-                    <div class="ai-item-price">$${opt.price}</div>
-                    <button class="ai-action-btn" onclick="transferSavedToMainWishlist(${idx})">ADD TO MAIN WISHLIST</button>
-                `;
+                    <button class="trash-btn" onclick="removeSavedOption(${idx})" aria-label="Remove from saved">✕</button>
+                    <img src="${esc(opt.image)}" class="ai-item-img" alt="" referrerpolicy="no-referrer">
+                    <div class="ai-item-title">${esc(opt.title)}</div>
+                    <div class="ai-item-brand">${esc(opt.store)}</div>
+                    <div class="ai-item-price">${money(opt.price) || "See store"}</div>
+                    <div class="ai-btn-row">
+                        <a class="ai-action-btn outline" href="${esc(opt.url)}" target="_blank" rel="noopener">VIEW</a>
+                        <button class="ai-action-btn" onclick="transferSavedToMainWishlist(${idx}, this)">ADD TO WISHLIST</button>
+                    </div>`;
                 grid.appendChild(card);
             });
-            lucide.createIcons();
         }
 
-        function transferSavedToMainWishlist(savedIndex) {
-            const genItem = wishlistData.find(i => i.id === activeGeneralItemId);
-            if (!genItem || !genItem.savedOptions) return;
-
-            const savedOpt = genItem.savedOptions[savedIndex];
-
-            // Add as specific item to main wishlist
-            wishlistData.push({
-                id: Date.now().toString(),
-                type: 'specific',
-                title: savedOpt.title,
-                price: savedOpt.price,
-                category: savedOpt.category || 'Bottoms',
-                color: savedOpt.color || 'Pink',
-                image: savedOpt.image,
-                dateAdded: Date.now()
-            });
-
-            // Remove from general item saved options
-            genItem.savedOptions.splice(savedIndex, 1);
-
+        function removeSavedOption(idx) {
+            const item = activeGeneral();
+            if (!item) return;
+            item.savedOptions.splice(idx, 1);
+            saveState();
             updateSavedCount();
             renderAiSaved();
-            renderWishlist();
         }
 
-        // --- OUTFIT MODELER LOGIC ---
+        async function transferSavedToMainWishlist(savedIndex, btn) {
+            const item = activeGeneral();
+            const opt = item?.savedOptions?.[savedIndex];
+            if (!opt) return;
+
+            btn.disabled = true;
+            btn.textContent = "ADDING…";
+            // The general idea stays on the wishlist; this adds the chosen option as its own item
+            await addProductToWishlist(opt, { color: item.targetColor, size: filtersFromControls().size });
+
+            const i = item.savedOptions.indexOf(opt);
+            if (i !== -1) item.savedOptions.splice(i, 1);
+            saveState();
+            updateSavedCount();
+            renderAiSaved();
+        }
+
+        // ---------- outfit modeler ----------
+
+        // Which mannequin slot an item belongs in
+        function slotFor(item) {
+            if (item.subcategory === "hat") return "Head";
+            if (item.category === "Tops" || item.category === "Outerwear") return "Tops";
+            if (item.category === "Bottoms") return "Bottoms";
+            if (item.category === "Shoes") return "Shoes";
+            return "Accessories";
+        }
+
+        function inWishlist(item) {
+            return wishlistData.some((w) => w.id === item.id || (item.url && w.url === item.url));
+        }
 
         function renderModelerSidebar() {
-            const grid = document.getElementById('modeler-sidebar-grid');
-            grid.innerHTML = '';
+            const grid = document.getElementById("modeler-sidebar-grid");
+            const typeFilter = document.getElementById("modeler-filter-type").value;
+            const showingResults = modelerView.mode === "results";
 
-            const categoryFilter = document.getElementById('modeler-filter-type').value;
+            document.getElementById("sidebar-mode-label").textContent = showingResults ? modelerView.label : "WISHLIST ITEMS";
+            document.getElementById("btn-clear-search").classList.toggle("hidden", !showingResults);
 
-            let sourceList = [];
-
-            if (modelerSearchResults !== null) {
-                // Showing Search Results
-                document.getElementById('sidebar-mode-label').innerText = 'AI SEARCH RESULTS';
-                document.getElementById('btn-clear-search').classList.remove('hidden');
-                sourceList = modelerSearchResults;
-            } else {
-                // Default: Showing Wishlist
-                document.getElementById('sidebar-mode-label').innerText = 'WISHLIST ITEMS';
-                document.getElementById('btn-clear-search').classList.add('hidden');
-                
-                // Only specific items or saved options from wishlist
-                wishlistData.forEach(item => {
-                    if (item.type === 'specific') {
-                        sourceList.push(item);
-                    } else if (item.savedOptions) {
-                        item.savedOptions.forEach(opt => sourceList.push(opt));
-                    }
-                });
+            if (showingResults && modelerView.status === "loading") {
+                grid.innerHTML = `<div class="empty-msg">Searching real stores. This can take up to a minute.</div>`;
+                return;
             }
-
-            // Apply clothing category filter
-            if (categoryFilter !== 'ALL') {
-                sourceList = sourceList.filter(i => (i.category || 'Tops') === categoryFilter);
-            }
-
-            if (sourceList.length === 0) {
-                grid.innerHTML = `<div style="grid-column: 1/-1; font-size:11px; color: var(--mid-gray);">No items available.</div>`;
+            if (showingResults && modelerView.status === "error") {
+                grid.innerHTML = `<div class="empty-msg">Search failed: ${esc(modelerView.error)}</div>`;
                 return;
             }
 
-            sourceList.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'sidebar-item';
-                card.draggable = true;
+            let list = showingResults ? modelerView.results : wishlistData;
+            if (typeFilter !== "ALL") list = list.filter((i) => i.category === typeFilter);
 
-                card.ondragstart = (e) => {
-                    e.dataTransfer.setData('text/plain', JSON.stringify(item));
-                };
+            grid.innerHTML = "";
+            if (!list.length) {
+                grid.innerHTML = `<div class="empty-msg">No items here yet.</div>`;
+                return;
+            }
 
-                card.innerHTML = `
-                    <img src="${item.image}">
-                    <div class="sidebar-item-info">
-                        <div class="sidebar-item-name">${item.title}</div>
-                        <div class="sidebar-item-price">$${item.price || 0}</div>
-                    </div>
-                `;
+            list.forEach((item) => {
+                const card = document.createElement("div");
+
+                if (item.type === "general") {
+                    // General idea: clicking shows options found for it
+                    const img = rotationImages(item)[0];
+                    card.className = "sidebar-item general";
+                    card.onclick = () => openGeneralInModeler(item.id);
+                    card.innerHTML = `
+                        <span class="card-badge" style="top:4px; left:4px;">IDEA</span>
+                        ${img ? `<img src="${esc(img)}" alt="" referrerpolicy="no-referrer">`
+                              : `<div class="card-placeholder">${esc(item.title)}</div>`}
+                        <div class="sidebar-item-info">
+                            <div class="sidebar-item-name">${esc(item.title)}</div>
+                            <div class="sidebar-item-price">See options</div>
+                        </div>`;
+                } else {
+                    // Specific item or search result: click to wear, or drag to a slot
+                    card.className = "sidebar-item";
+                    card.draggable = true;
+                    card.ondragstart = (e) => e.dataTransfer.setData("text/plain", JSON.stringify(item));
+                    card.onclick = () => placeOnMannequin(item);
+                    card.innerHTML = `
+                        <img src="${esc(item.image)}" alt="" referrerpolicy="no-referrer">
+                        <div class="sidebar-item-info">
+                            <div class="sidebar-item-name">${esc(item.title)}</div>
+                            <div class="sidebar-item-price">${money(item.price)}</div>
+                        </div>`;
+                }
                 grid.appendChild(card);
             });
         }
 
-        function executeModelerSearch() {
-            const query = document.getElementById('modeler-search-input').value.trim().toLowerCase();
+        // Clicking a general idea in the modeler shows everything found for it
+        async function openGeneralInModeler(itemId) {
+            const item = wishlistData.find((i) => i.id === itemId);
+            if (!item) return;
+
+            const label = `OPTIONS: ${item.title}`;
+            const showOptions = () => {
+                const saved = item.savedOptions || [];
+                const rest = (item.searchResults || []).filter((r) => !saved.some((s) => s.url === r.url));
+                modelerView = { mode: "results", label, status: "ready", results: [...saved, ...rest], error: "" };
+                renderModelerSidebar();
+            };
+
+            if (item.searchResults?.length) return showOptions();
+
+            modelerView = { mode: "results", label, status: "loading", results: [], error: "" };
+            renderModelerSidebar();
+            try {
+                await searchForGeneral(item, {});
+                if (modelerView.label === label) showOptions();
+            } catch (e) {
+                if (modelerView.label !== label) return;
+                modelerView = { ...modelerView, status: "error", error: e.message };
+                renderModelerSidebar();
+            }
+        }
+
+        async function executeModelerSearch() {
+            const query = document.getElementById("modeler-search-input").value.trim();
             if (!query) return;
 
-            // Search mock database
-            modelerSearchResults = mockAiDatabase.filter(item => 
-                item.title.toLowerCase().includes(query) || 
-                item.category.toLowerCase().includes(query) ||
-                item.color.toLowerCase().includes(query)
-            );
+            const label = `RESULTS: ${query}`;
+            modelerView = { mode: "results", label, status: "loading", results: [], error: "" };
+            renderModelerSidebar();
 
-            // If no match found, show generic generated suggestions
-            if (modelerSearchResults.length === 0) {
-                modelerSearchResults = [
-                    { id: 'sr-1', title: query + ' Style Option A', price: 65, category: 'Tops', image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400&auto=format&fit=crop&q=60' },
-                    { id: 'sr-2', title: query + ' Style Option B', price: 110, category: 'Bottoms', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&auto=format&fit=crop&q=60' }
-                ];
+            try {
+                const data = await api("/api/search", { q: query });
+                if (modelerView.label !== label) return; // a newer search replaced this one
+                modelerView = {
+                    mode: "results", label, status: "ready", error: "",
+                    results: data.results.map((r) => optionFromResult(r, data.itemType, data.targetColor)),
+                };
+            } catch (e) {
+                if (modelerView.label !== label) return;
+                modelerView = { mode: "results", label, status: "error", results: [], error: e.message };
             }
-
             renderModelerSidebar();
         }
 
         function clearModelerSearch() {
-            modelerSearchResults = null;
-            document.getElementById('modeler-search-input').value = '';
+            modelerView = { mode: "wishlist", label: "", status: "ready", results: [], error: "" };
+            document.getElementById("modeler-search-input").value = "";
             renderModelerSidebar();
         }
 
-        // Drag and Drop onto Mannequin
+        function placeOnMannequin(item, slotName = null) {
+            const slot = slotName || slotFor(item);
+            outfitSlots[slot] = {
+                id: item.id, title: item.title, price: item.price, url: item.url, image: item.image,
+                store: item.store, category: item.category, subcategory: item.subcategory || null,
+                color: item.color || null,
+            };
+            saveState();
+            renderSlots();
+        }
+
+        // Drag and drop: onto a slot box, or onto the figure itself (picks the slot automatically)
         function handleDragOver(e) {
             e.preventDefault();
-            e.currentTarget.classList.add('drag-over');
+            e.currentTarget.classList.add("drag-over");
         }
 
         function handleDragLeave(e) {
-            e.currentTarget.classList.remove('drag-over');
+            e.currentTarget.classList.remove("drag-over");
         }
 
         function handleDrop(e, slotName) {
             e.preventDefault();
-            e.currentTarget.classList.remove('drag-over');
+            e.currentTarget.classList.remove("drag-over");
+            const raw = e.dataTransfer.getData("text/plain");
+            if (!raw) return;
+            try { placeOnMannequin(JSON.parse(raw), slotName); } catch { /* not one of our items */ }
+        }
 
-            const itemDataStr = e.dataTransfer.getData('text/plain');
-            if (!itemDataStr) return;
-
-            const item = JSON.parse(itemDataStr);
-            outfitSlots[slotName] = item;
-
-            renderSlots();
+        // Cutout image that falls back to the original photo if background removal fails
+        function cutoutImg(item, className = "") {
+            const img = document.createElement("img");
+            img.alt = "";
+            img.referrerPolicy = "no-referrer";
+            if (className) img.className = className + " loading";
+            img.src = cutoutUrl(item.image);
+            img.onload = () => img.classList.remove("loading");
+            img.onerror = () => { img.onerror = null; img.classList.remove("loading"); img.src = item.image; };
+            return img;
         }
 
         function renderSlots() {
+            const layer = document.getElementById("figure-layer");
+            layer.innerHTML = "";
             let total = 0;
 
-            Object.keys(outfitSlots).forEach(slotName => {
+            Object.keys(outfitSlots).forEach((slotName) => {
                 const container = document.getElementById(`slot-content-${slotName}`);
                 const item = outfitSlots[slotName];
+                container.innerHTML = "";
+                if (!item) return;
 
-                if (!item) {
-                    container.innerHTML = '';
-                    return;
-                }
+                total += Number(item.price) || 0;
 
-                total += (item.price || 0);
+                // On the figure
+                if (item.image) layer.appendChild(cutoutImg(item, `worn worn-${slotName}`));
 
-                // Check if this item is already in main wishlist
-                const inWishlist = wishlistData.some(w => w.id === item.id || w.title === item.title);
-
-                const slotCard = document.createElement('div');
-                slotCard.className = 'slot-card';
+                // In the slot box
+                const slotCard = document.createElement("div");
+                slotCard.className = "slot-card";
+                slotCard.title = item.title;
                 slotCard.innerHTML = `
-                    <button class="slot-card-remove" onclick="removeSlotItem('${slotName}')">✕</button>
-                    <img src="${item.image}">
-                    ${!inWishlist ? `<button class="slot-card-add-wl" onclick="addSlotItemToWishlist('${slotName}')">+ WISHLIST</button>` : ''}
-                `;
-
-                container.innerHTML = '';
+                    <button class="slot-card-remove" onclick="removeSlotItem('${slotName}')" aria-label="Remove">✕</button>
+                    ${!inWishlist(item) ? `<button class="slot-card-add-wl" onclick="addSlotItemToWishlist('${slotName}', this)">+ WISHLIST</button>` : ""}`;
+                if (item.image) slotCard.prepend(cutoutImg(item));
                 container.appendChild(slotCard);
             });
 
-            document.getElementById('outfit-total').innerText = `OUTFIT TOTAL: $${total}`;
+            document.getElementById("outfit-total").textContent = `OUTFIT TOTAL: ${money(total) || "$0"}`;
         }
 
         function removeSlotItem(slotName) {
             outfitSlots[slotName] = null;
+            saveState();
             renderSlots();
         }
 
-        function addSlotItemToWishlist(slotName) {
+        function clearOutfit() {
+            Object.keys(outfitSlots).forEach((k) => (outfitSlots[k] = null));
+            saveState();
+            renderSlots();
+        }
+
+        async function addSlotItemToWishlist(slotName, btn) {
             const item = outfitSlots[slotName];
             if (!item) return;
-
-            wishlistData.push({
-                id: Date.now().toString(),
-                type: 'specific',
-                title: item.title,
-                price: item.price || 0,
-                category: item.category || slotName,
-                color: item.color || 'Black',
-                image: item.image,
-                dateAdded: Date.now()
-            });
-
+            btn.disabled = true;
+            btn.textContent = "ADDING…";
+            const added = await addProductToWishlist(item, { color: item.color });
+            outfitSlots[slotName] = { ...item, id: added.id };
+            saveState();
             renderSlots();
-            renderWishlist();
+            renderModelerSidebar();
         }
+
+        // ---------- start up ----------
+
+        window.onload = () => {
+            const colorSelect = document.getElementById("filter-color");
+            COLORS.forEach((c) => colorSelect.insertAdjacentHTML("beforeend",
+                `<option value="${c}">${c.toUpperCase()}</option>`));
+
+            loadState();
+            renderWishlist();
+            renderSlots();
+
+            // Pick up searches that never finished (e.g. the page was closed mid-search)
+            wishlistData
+                .filter((i) => i.type === "general" && !i.searchResults)
+                .forEach((i) => searchForGeneral(i, {}).catch(() => {}));
+        };
     </script>
 </body>
 </html>
